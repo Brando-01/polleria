@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Mesa 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #FF6B35;
+        }
+        button {
+            background: #FF6B35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #ff8c42;
+        }
+        #output {
+            background: #222;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            min-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .warning { color: #ff0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Mesa 2 - Debugging</h1>
+        
+        <div class="test-section">
+            <h2>Controles</h2>
+            <button onclick="testComparison()">Probar Comparación de Números</button>
+            <button onclick="testTableObject()">Ver Estructura de Tabla</button>
+            <button onclick="clearOutput()">Limpiar Output</button>
+            <button onclick="loadFromLocalStorage()">Cargar Datos de localStorage</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Output</h2>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(msg, type = 'info') {
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            const timestamp = new Date().toLocaleTimeString();
+            const html = `<div class="${className}">[${timestamp}] ${msg}</div>`;
+            output.innerHTML += html;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            output.innerHTML = '';
+            log('Output limpiado', 'success');
+        }
+
+        function testComparison() {
+            log('=== TEST DE COMPARACIÓN ===', 'success');
+            
+            // Simular diferentes formas de guardar/comparar el número 2
+            const scenarios = [
+                { name: 'String directo', value: "2" },
+                { name: 'String con espacio', value: " 2 " },
+                { name: 'Number convertido a string', value: String(2) },
+                { name: 'parseInt("2", 10)', value: String(parseInt("2", 10)) },
+            ];
+
+            const tableNumber = 2; // Mesa 2
+
+            scenarios.forEach(scenario => {
+                const match = parseInt(String(scenario.value).trim(), 10) === tableNumber;
+                log(`${scenario.name}: "${scenario.value}" → parseInt(trim) = ${parseInt(String(scenario.value).trim(), 10)} → Match: ${match}`, match ? 'success' : 'error');
+            });
+        }
+
+        function testTableObject() {
+            log('=== TEST DE ESTRUCTURA ===', 'success');
+            
+            const defaultTables = [
+                { id: 1, number: "1", status: "disponible" },
+                { id: 2, number: "2", status: "disponible" },
+                { id: 3, number: "3", status: "disponible" }
+            ];
+
+            log('Tablas por defecto:', 'info');
+            defaultTables.forEach(table => {
+                const numInt = parseInt(String(table.number), 10);
+                log(`  Mesa ${table.number}: type=${typeof table.number}, parseInt=${numInt}`, 'info');
+            });
+
+            // Simular búsqueda de mesa 2
+            const searchFor = 2;
+            log(`Buscando mesa: ${searchFor}`, 'warning');
+            
+            const found = defaultTables.find(t => {
+                const tNumInt = parseInt(String(t.number).trim(), 10);
+                const match = tNumInt === searchFor;
+                log(`  Comparando: ${t.number} (int: ${tNumInt}) === ${searchFor} = ${match}`, match ? 'success' : 'warning');
+                return match;
+            });
+
+            if (found) {
+                log(`✓ Mesa encontrada: ${found.number}`, 'success');
+            } else {
+                log(`✗ Mesa NO encontrada`, 'error');
+            }
+        }
+
+        function loadFromLocalStorage() {
+            log('=== DATOS DE localStorage ===', 'warning');
+            
+            try {
+                const tables = JSON.parse(localStorage.getItem('tables'));
+                const orders = JSON.parse(localStorage.getItem('orders'));
+
+                if (tables) {
+                    log(`Tablas guardadas: ${tables.length}`, 'info');
+                    tables.forEach(table => {
+                        log(`  Mesa: ${table.number} (id: ${table.id}, status: ${table.status}) - type: ${typeof table.number}`, 'info');
+                    });
+                } else {
+                    log('No hay tablas guardadas', 'warning');
+                }
+
+                if (orders && orders.length > 0) {
+                    log(`Órdenes guardadas: ${orders.length}`, 'info');
+                    orders.forEach(order => {
+                        const tableNum = order.tableNumber ? parseInt(String(order.tableNumber), 10) : 'N/A';
+                        log(`  Order #${order.id}: Mesa ${order.tableNumber} (int: ${tableNum}), Status: ${order.status}, Type: ${order.type}`, 'info');
+                    });
+                    
+                    // Test de búsqueda de mesa 2
+                    log('', 'info');
+                    log('Buscando órdenes en mesa 2:', 'warning');
+                    const ordersInTable2 = orders.filter(o => {
+                        const match = o.type === 'table' && parseInt(String(o.tableNumber), 10) === 2 && o.status === 'pendiente';
+                        if (match) {
+                            log(`  ✓ Order #${o.id} en mesa 2 (pendiente)`, 'success');
+                        }
+                        return match;
+                    });
+                    
+                    if (ordersInTable2.length === 0) {
+                        log('  No hay órdenes pendientes en mesa 2', 'warning');
+                    }
+                } else {
+                    log('No hay órdenes guardadas', 'warning');
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Log inicial
+        log('Test de Mesa 2 - Haz clic en los botones para hacer pruebas', 'success');
+    </script>
+</body>
+</html>

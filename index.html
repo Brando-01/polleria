@@ -1154,6 +1154,16 @@
                     <button class="btn btn-primary" id="addTableBtn" style="margin-top: 15px;">
                         <i class="fas fa-plus"></i> Agregar Mesa
                     </button>
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
+                        <h3 style="margin-bottom: 15px; color: #666;">⚙️ Mantenimiento</h3>
+                        <button class="btn btn-danger" id="clearOldDataBtn" style="width: 100%;">
+                            <i class="fas fa-trash"></i> Limpiar Datos Anteriores a 2026
+                        </button>
+                        <p style="font-size: 0.85rem; color: #999; margin-top: 8px; text-align: center;">
+                            Elimina pedidos anteriores a enero 2026
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1326,6 +1336,19 @@
             window.products = savedProducts ? JSON.parse(savedProducts) : defaultProducts;
             window.tables = savedTables ? JSON.parse(savedTables) : defaultTables;
             window.orders = savedOrders ? JSON.parse(savedOrders) : [];
+            
+            // LIMPIAR AUTOMÁTICAMENTE: Eliminar órdenes anteriores a 2026
+            window.orders = window.orders.filter(order => {
+                if (!order.date) return true; // Si no tiene fecha, mantener
+                const orderYear = parseInt(order.date.substring(0, 4), 10);
+                return orderYear === 2026; // Solo mantener órdenes de 2026
+            });
+            
+            // Guardar la lista limpia
+            if (savedOrders) {
+                saveData();
+                console.log('✓ Datos limpios: Se eliminaron órdenes anteriores a 2026');
+            }
         }
         
         // Guardar datos en localStorage
@@ -1668,17 +1691,25 @@
                 // Calcular total
                 const total = currentOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                 
-                // Crear nuevo pedido
+                // Crear nuevo pedido - Con fecha y hora actual correcta
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const dateString = `${year}-${month}-${day} ${hours}:${minutes}`;
+                
                 const newOrder = {
                     id: orders.length + 1,
                     customerName: currentOrder.customerName,
                     type: currentOrder.type,
-                    tableNumber: currentOrder.type === 'table' ? currentOrder.tableNumber : null,
+                    tableNumber: currentOrder.type === 'table' ? String(currentOrder.tableNumber) : null,
                     items: [...currentOrder.items],
                     total: total,
                     paymentMethod: currentOrder.paymentMethod,
                     status: 'pendiente',
-                    date: new Date().toISOString().slice(0, 16).replace('T', ' ')
+                    date: dateString
                 };
                 
                 // Agregar a la lista de pedidos
@@ -1689,10 +1720,24 @@
                 
                 // Actualizar estado de la mesa si es pedido en mesa
                 if (currentOrder.type === 'table') {
-                    const table = tables.find(t => t.number === currentOrder.tableNumber);
+                    const tableNumInt = parseInt(String(currentOrder.tableNumber).trim(), 10);
+                    console.log(`[DEBUG GUARDAR] Intentando bloquear mesa: "${currentOrder.tableNumber}" (int: ${tableNumInt})`);
+                    
+                    const table = tables.find(t => {
+                        const tNumInt = parseInt(String(t.number).trim(), 10);
+                        const match = tNumInt === tableNumInt;
+                        if (tableNumInt === 2) {
+                            console.log(`[DEBUG MESA 2] Comparando "${t.number}" (int: ${tNumInt}) === ${tableNumInt} = ${match}`);
+                        }
+                        return match;
+                    });
+                    
                     if (table) {
                         table.status = 'ocupada';
                         saveData();
+                        console.log(`✓✓✓ Mesa ${table.number} ahora está ocupada`);
+                    } else {
+                        console.error(`✗✗✗ Mesa "${tableNumInt}" NO encontrada. Mesas disponibles:`, tables.map(t => ({ number: t.number, intValue: parseInt(t.number, 10) })));
                     }
                 }
                 
@@ -1742,12 +1787,14 @@
                     return;
                 }
                 
-                // Filtrar pedidos pendientes y de hoy
-                const today = new Date().toISOString().slice(0, 10);
+                // Filtrar pedidos pendientes de hoy (por status pendiente o pagado de hoy)
+                const today = new Date();
+                const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                
                 const currentOrders = orders.filter(order => 
-                    order.status === 'pendiente' || order.date.includes(today)
+                    order.date.startsWith(todayString) && (order.status === 'pendiente' || order.status === 'pagado')
                 );
-                console.log('Current orders found:', currentOrders.length);
+                console.log(`Pedidos de ${todayString} encontrados:`, currentOrders.length);
                 
                 if (currentOrders.length === 0) {
                     currentOrdersList.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No hay pedidos en curso</p>';
@@ -1856,11 +1903,22 @@
                 };
                 
                 // Liberar mesa si es pedido en mesa
-                if (order.type === 'table') {
-                    const table = tables.find(t => t.number === order.tableNumber);
+                if (order.type === 'table' && order.tableNumber) {
+                    const tableNumInt = parseInt(String(order.tableNumber).trim(), 10);
+                    console.log(`[DEBUG PAGO] Liberando mesa: "${order.tableNumber}" (int: ${tableNumInt})`);
+                    
+                    const table = tables.find(t => {
+                        const tNumInt = parseInt(String(t.number).trim(), 10);
+                        return tNumInt === tableNumInt;
+                    });
+                    
                     if (table) {
                         table.status = 'disponible';
+                        console.log(`✓✓✓ Mesa ${table.number} ahora está disponible`);
                         alert(`✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]}.\n✓ Mesa ${table.number} ahora está disponible.`);
+                    } else {
+                        console.warn(`Mesa ${tableNumInt} no encontrada en el pago`);
+                        alert(`✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]}.`);
                     }
                 } else {
                     alert(`✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]}.`);
@@ -2332,21 +2390,27 @@
             const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                               'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
             
-            // Obtener rango de meses (últimos 12 meses desde hoy)
+            // Obtener rango de meses SOLO de 2026 en adelante (desde enero 2026)
             const months = new Set();
-            for (let i = 0; i < 12; i++) {
-                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const startDate = new Date(2026, 0, 1); // Enero 1, 2026
+            
+            // Agregar meses desde enero 2026 hasta el mes actual
+            let currentMonth = new Date(2026, 0, 1); // Empezar en enero 2026
+            while (currentMonth <= today) {
+                const monthKey = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
                 months.add(monthKey);
                 
                 if (!monthlyData[monthKey]) {
                     monthlyData[monthKey] = {
-                        name: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
+                        name: `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`,
                         weeks: {},
                         totalOrders: 0,
                         totalSales: 0
                     };
                 }
+                
+                // Pasar al siguiente mes
+                currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
             }
             
             // Procesar pedidos
@@ -2587,24 +2651,47 @@
         
         // Cargar mesas
         function loadTables() {
+            console.log('=== EJECUTANDO loadTables() ===');
             const tableSelect = document.getElementById('tableNumber');
+            if (!tableSelect) {
+                console.error('✗✗✗ ERROR: Element #tableNumber no encontrado!');
+                return;
+            }
+            console.log(`✓ tableSelect encontrado, tiene ${tables.length} mesas en total`);
+            console.log(`Órdenes en sistema: ${orders.length}`);
+            console.log('Órdenes pendientes:', orders.filter(o => o.status === 'pendiente').map(o => ({ id: o.id, tableNumber: o.tableNumber, status: o.status })));
+            
+            const previousValue = tableSelect.value;
             tableSelect.innerHTML = '';
             
             tables.forEach(table => {
                 // Verificar si la mesa tiene pedidos pendientes
-                const hasPendingOrder = orders.some(order => 
-                    order.type === 'table' && 
-                    order.tableNumber === table.number && 
-                    order.status === 'pendiente'
-                );
+                // Usa parseInt para evitar problemas con espacios o caracteres invisibles
+                const tableNumInt = parseInt(String(table.number).trim(), 10);
+                
+                const hasPendingOrder = orders.some(order => {
+                    if (order.type !== 'table' || order.status !== 'pendiente') {
+                        return false;
+                    }
+                    
+                    const orderTableInt = parseInt(String(order.tableNumber).trim(), 10);
+                    const match = orderTableInt === tableNumInt;
+                    
+                    if (tableNumInt === 2) {
+                        console.log(`[DEBUG MESA 2] Order#${order.id}: "${order.tableNumber}" (int: ${orderTableInt}) vs Mesa "${table.number}" (int: ${tableNumInt}) = ${match}`);
+                    }
+                    
+                    return match;
+                });
                 
                 const option = document.createElement('option');
-                option.value = table.number;
+                option.value = String(table.number);
                 
                 // Si tiene pedido pendiente, mostrar como bloqueada
                 if (hasPendingOrder) {
                     option.textContent = `Mesa ${table.number} - 🔒 BLOQUEADA`;
                     option.disabled = true;
+                    console.log(`✓ Mesa ${table.number} BLOQUEADA`);
                 } else {
                     option.textContent = `Mesa ${table.number} (${table.status === 'disponible' ? 'Disponible' : 'Ocupada'})`;
                     option.disabled = false;
@@ -2612,6 +2699,15 @@
                 
                 tableSelect.appendChild(option);
             });
+            
+            // Restaurar el valor anterior si aún existe
+            if (previousValue && Array.from(tableSelect.options).some(o => o.value === previousValue)) {
+                tableSelect.value = previousValue;
+                console.log(`✓ Value restaurado a: ${previousValue}`);
+            } else if (tableSelect.options.length > 0) {
+                tableSelect.value = tableSelect.options[0].value;
+                console.log(`✓ Value establecido a primera opción: ${tableSelect.options[0].value}`);
+            }
         }
         
         // Configurar eventos del modal de pago
@@ -2652,6 +2748,32 @@
         
         // Configurar eventos de administración
         function setupAdminEvents() {
+            // Botón de limpiar datos antiguos
+            const clearOldDataBtn = document.getElementById('clearOldDataBtn');
+            if (clearOldDataBtn) {
+                clearOldDataBtn.addEventListener('click', function() {
+                    if (confirm('¿Está seguro de que desea eliminar TODOS los pedidos anteriores a 2026?\n\nEsta acción NO se puede deshacer.')) {
+                        const originalCount = orders.length;
+                        orders = orders.filter(order => {
+                            if (!order.date) return true;
+                            const orderYear = parseInt(order.date.substring(0, 4), 10);
+                            return orderYear === 2026;
+                        });
+                        
+                        const deletedCount = originalCount - orders.length;
+                        saveData();
+                        
+                        alert(`✓ Se eliminaron ${deletedCount} pedidos anteriores a 2026.\n✓ Ahora tienes ${orders.length} pedidos de 2026.`);
+                        
+                        // Recargar vistas
+                        loadCurrentOrders();
+                        loadHistory();
+                        loadStatistics();
+                        console.log(`✓ Limpieza completada: ${deletedCount} pedidos eliminados`);
+                    }
+                });
+            }
+            
             // Modal de productos
             const productModal = document.getElementById('productModal');
             const addProductBtn = document.getElementById('addProductBtn');
@@ -2757,15 +2879,16 @@
             
             // Guardar mesa
             saveTable.addEventListener('click', function() {
-                const number = document.getElementById('newTableNumber').value.trim();
+                const number = String(document.getElementById('newTableNumber').value.trim());
                 
-                if (!number || isNaN(number) || parseInt(number) <= 0) {
+                if (!number || isNaN(parseInt(number)) || parseInt(number) <= 0) {
                     alert('Debe ingresar un número válido para la mesa.');
                     return;
                 }
                 
                 // Verificar si ya existe una mesa con ese número
-                if (tables.some(t => t.number === number && t.id !== editingTableId)) {
+                const numberInt = parseInt(number, 10);
+                if (tables.some(t => parseInt(String(t.number), 10) === numberInt && t.id !== editingTableId)) {
                     alert('Ya existe una mesa con ese número.');
                     return;
                 }
@@ -2936,8 +3059,9 @@
                     
                     if (table && confirm(`¿Está seguro de que desea eliminar la Mesa ${table.number}?`)) {
                         // Verificar si hay pedidos para esta mesa
+                        const tableNumInt = parseInt(String(table.number), 10);
                         const hasOrders = orders.some(order => 
-                            order.type === 'table' && order.tableNumber === table.number
+                            order.type === 'table' && parseInt(String(order.tableNumber), 10) === tableNumInt
                         );
                         
                         if (hasOrders) {
