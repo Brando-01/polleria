@@ -559,20 +559,203 @@
         }
         
         @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .logo {
+                justify-content: center;
+                gap: 10px;
+            }
+            
+            .logo i {
+                font-size: 2rem;
+            }
+            
+            .logo h1 {
+                font-size: 1.3rem;
+            }
+            
+            .logo p {
+                font-size: 0.85rem;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .user-info div {
+                text-align: center;
+                font-size: 0.9rem;
+            }
+            
+            .btn-logout {
+                width: 100%;
+                padding: 10px;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                margin-bottom: 20px;
+            }
+            
+            .tab {
+                padding: 12px 10px;
+                font-size: 0.9rem;
+                border-bottom: none;
+                border-left: 3px solid transparent;
+            }
+            
+            .tab.active {
+                border-bottom: none;
+                border-left: 3px solid var(--primary);
+            }
+            
+            .tab-content {
+                padding: 15px;
+                border-radius: 5px;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+                padding-left: 10px;
+            }
+            
             .row {
                 flex-direction: column;
+                gap: 15px;
             }
             
             .col {
                 width: 100%;
+                min-width: auto;
             }
             
-            .logo h1 {
-                font-size: 1.4rem;
+            input, select, textarea {
+                font-size: 16px;
+                padding: 12px 10px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.95rem;
+                width: 100%;
             }
             
             .orders-container {
                 grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .order-card {
+                padding: 15px;
+                border-left-width: 4px;
+            }
+            
+            .statistics-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+            
+            .stat-info h3 {
+                font-size: 1.5rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 10px;
+            }
+            
+            .product-card {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-width: 100%;
+                padding: 20px;
+                max-height: 95vh;
+            }
+            
+            .table-container {
+                font-size: 0.85rem;
+            }
+            
+            th, td {
+                padding: 10px 5px;
+                font-size: 0.9rem;
+            }
+            
+            .chart-container {
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 5px;
+            }
+            
+            header {
+                padding: 15px 10px;
+            }
+            
+            .logo h1 {
+                font-size: 1.1rem;
+            }
+            
+            .btn {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+                margin-bottom: 15px;
+            }
+            
+            .tab {
+                padding: 10px 5px;
+                font-size: 0.8rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .product-card {
+                padding: 8px;
+                font-size: 0.8rem;
+            }
+            
+            .modal-content {
+                padding: 15px;
+            }
+            
+            th, td {
+                padding: 8px 3px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -1796,15 +1979,28 @@
             // Procesar pedidos pagados
             orders.forEach(order => {
                 if (order.status === 'pagado') {
-                    const orderDate = new Date(order.date);
+                    // Convertir fecha correctamente - format: "YYYY-MM-DD HH:MM"
+                    const dateStr = order.date.replace(' ', 'T');
+                    const orderDate = new Date(dateStr);
+                    
+                    if (isNaN(orderDate.getTime())) {
+                        console.warn('Fecha inválida:', order.date);
+                        return;
+                    }
+                    
                     const orderDayOfWeek = orderDate.getDay();
+                    const orderMonth = orderDate.getMonth();
+                    const orderYear = orderDate.getFullYear();
+                    
+                    const todayMonth = today.getMonth();
+                    const todayYear = today.getFullYear();
                     
                     // Verificar si el pedido está en la semana actual
-                    const daysDiff = orderDate.getDate() - firstDayOfWeek.getDate();
-                    if (daysDiff >= 0 && daysDiff <= 6 && orderDate.getMonth() === today.getMonth()) {
+                    const daysFromMonday = (orderDate.getDate() - firstDayOfWeek.getDate());
+                    if (daysFromMonday >= 0 && daysFromMonday <= 6 && orderMonth === todayMonth && orderYear === todayYear) {
                         const dayName = days[orderDayOfWeek === 0 ? 6 : orderDayOfWeek - 1];
                         if (weekData[dayName]) {
-                            weekData[dayName].sales += order.total;
+                            weekData[dayName].sales += parseFloat(order.total) || 0;
                             weekData[dayName].orders += 1;
                         }
                     }
@@ -1873,7 +2069,15 @@
             const today = new Date();
             
             orders.filter(order => order.status === 'pagado').forEach(order => {
-                const orderDate = new Date(order.date);
+                // Convertir fecha correctamente - format: "YYYY-MM-DD HH:MM"
+                const dateStr = order.date.replace(' ', 'T');
+                const orderDate = new Date(dateStr);
+                
+                if (isNaN(orderDate.getTime())) {
+                    console.warn('Fecha inválida:', order.date);
+                    return;
+                }
+                
                 const dayOfWeek = orderDate.getDay();
                 const firstDayOfWeek = new Date(orderDate);
                 firstDayOfWeek.setDate(orderDate.getDate() - dayOfWeek + 1);
@@ -1891,15 +2095,16 @@
                 }
                 
                 weeklyData[weekKey].orders += 1;
-                weeklyData[weekKey].sales += order.total;
+                weeklyData[weekKey].sales += parseFloat(order.total) || 0;
                 
                 // Agrupar por día
                 const dayName = orderDate.toLocaleDateString('es-ES', { weekday: 'long' });
-                if (!weeklyData[weekKey].dayDetails[dayName]) {
-                    weeklyData[weekKey].dayDetails[dayName] = { orders: 0, sales: 0 };
+                const dayNameCapitalized = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+                if (!weeklyData[weekKey].dayDetails[dayNameCapitalized]) {
+                    weeklyData[weekKey].dayDetails[dayNameCapitalized] = { orders: 0, sales: 0 };
                 }
-                weeklyData[weekKey].dayDetails[dayName].orders += 1;
-                weeklyData[weekKey].dayDetails[dayName].sales += order.total;
+                weeklyData[weekKey].dayDetails[dayNameCapitalized].orders += 1;
+                weeklyData[weekKey].dayDetails[dayNameCapitalized].sales += parseFloat(order.total) || 0;
             });
             
             // Ordenar por fecha descendente
