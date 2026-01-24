@@ -1220,6 +1220,35 @@
         </div>
     </div>
     
+    <!-- Modal para agregar más productos a una orden existente -->
+    <div class="modal" id="addMoreProductsModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-modal" id="closeAddMoreProductsModal">&times;</span>
+            <h3 class="modal-title">Agregar Más Productos</h3>
+            <p id="addMoreOrderInfo" style="color: #666; margin-bottom: 15px;"></p>
+            
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="margin: 0; color: #666;"><strong>Selecciona los productos adicionales:</strong></p>
+            </div>
+            
+            <div id="addMoreProductsContainer" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
+                <!-- Los productos se cargarán aquí dinámicamente -->
+            </div>
+            
+            <div style="background-color: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="margin: 5px 0; color: #333;"><strong>Subtotal actual:</strong> <span id="currentOrderTotal">S/ 0.00</span></p>
+                <p style="margin: 5px 0; color: #333;"><strong>Nuevos productos:</strong> <span id="newProductsTotal">S/ 0.00</span></p>
+                <hr style="margin: 10px 0;">
+                <p style="margin: 5px 0; font-size: 1.1em; color: #1976d2;"><strong>Total final:</strong> <span id="totalAfterAddProducts">S/ 0.00</span></p>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-success" id="confirmAddMoreProducts" style="flex: 1;">Agregar Productos</button>
+                <button class="btn btn-secondary" id="cancelAddMoreProducts" style="flex: 1;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Modal para seleccionar método de pago -->
     <div class="modal" id="paymentModal">
         <div class="modal-content" style="max-width: 500px; text-align: center;">
@@ -1404,6 +1433,7 @@
             
             // Configurar eventos del modal de pago
             setupPaymentModal();
+            setupAddMoreProductsModal();
             
             // Configurar eventos del modal de reporte semanal
             const weeklyReportModal = document.getElementById('weeklyReportModal');
@@ -1776,6 +1806,156 @@
             }
         }
         
+        // Cargar una orden existente para agregar más productos
+        function loadExistingOrderForAddingProducts(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) {
+                alert('Pedido no encontrado');
+                return;
+            }
+            
+            // Limpiar el formulario actual y cargar los datos de la orden existente
+            currentOrder.items = [];
+            currentOrder.customerName = order.customerName;
+            currentOrder.type = order.type;
+            currentOrder.tableNumber = order.tableNumber;
+            currentOrder.paymentMethod = order.paymentMethod;
+            
+            // Marcar el orden ID para luego agregarlo
+            currentOrder.existingOrderId = orderId;
+            
+            // Mostrar modal para agregar productos
+            const modal = document.getElementById('addMoreProductsModal');
+            const orderInfo = document.getElementById('addMoreOrderInfo');
+            orderInfo.innerHTML = `<strong>Pedido #${orderId}</strong> - Cliente: ${order.customerName}<br>Mesa: ${order.type === 'table' ? 'Mesa ' + order.tableNumber : 'Para Llevar'}`;
+            
+            // Mostrar productos actuales
+            let currentTotal = order.total;
+            const container = document.getElementById('addMoreProductsContainer');
+            container.innerHTML = '';
+            
+            // Crear inputs para nuevos productos
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product-item';
+                productElement.style.cssText = 'padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;';
+                
+                const quantityInput = document.createElement('input');
+                quantityInput.type = 'number';
+                quantityInput.min = '0';
+                quantityInput.value = '0';
+                quantityInput.style.cssText = 'width: 60px; padding: 5px;';
+                quantityInput.className = `add-product-qty add-product-qty-${product.id}`;
+                quantityInput.dataset.productId = product.id;
+                quantityInput.dataset.productPrice = product.price;
+                quantityInput.dataset.productName = product.name;
+                
+                productElement.innerHTML = `
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; color: #333;">${product.name}</div>
+                        <div style="font-size: 0.9rem; color: #666;">S/ ${product.price.toFixed(2)}</div>
+                    </div>
+                `;
+                
+                productElement.appendChild(quantityInput);
+                container.appendChild(productElement);
+                
+                // Evento para actualizar totales
+                quantityInput.addEventListener('input', updateAddMoreProductsTotal);
+            });
+            
+            // Actualizar totales
+            document.getElementById('currentOrderTotal').textContent = `S/ ${currentTotal.toFixed(2)}`;
+            updateAddMoreProductsTotal();
+            
+            modal.style.display = 'flex';
+        }
+        
+        // Actualizar totales en el modal de agregar productos
+        function updateAddMoreProductsTotal() {
+            let newProductsTotal = 0;
+            document.querySelectorAll('.add-product-qty').forEach(input => {
+                const qty = parseInt(input.value) || 0;
+                const price = parseFloat(input.dataset.productPrice);
+                newProductsTotal += qty * price;
+            });
+            
+            const currentTotal = parseFloat(document.getElementById('currentOrderTotal').textContent.replace('S/ ', ''));
+            const totalFinal = currentTotal + newProductsTotal;
+            
+            document.getElementById('newProductsTotal').textContent = `S/ ${newProductsTotal.toFixed(2)}`;
+            document.getElementById('totalAfterAddProducts').textContent = `S/ ${totalFinal.toFixed(2)}`;
+        }
+        
+        // Confirmar agregar más productos a una orden existente
+        function confirmAddMoreProducts() {
+            const orderId = currentOrder.existingOrderId;
+            if (!orderId) {
+                alert('Error: No se pudo identificar el pedido');
+                return;
+            }
+            
+            const order = orders.find(o => o.id === orderId);
+            if (!order) {
+                alert('Pedido no encontrado');
+                return;
+            }
+            
+            let newProductsAdded = 0;
+            document.querySelectorAll('.add-product-qty').forEach(input => {
+                const qty = parseInt(input.value) || 0;
+                if (qty > 0) {
+                    const productId = parseInt(input.dataset.productId);
+                    const product = products.find(p => p.id === productId);
+                    
+                    if (product) {
+                        // Verificar si el producto ya existe en la orden
+                        const existingItem = order.items.find(item => item.productId === productId);
+                        if (existingItem) {
+                            existingItem.quantity += qty;
+                        } else {
+                            order.items.push({
+                                productId: productId,
+                                name: product.name,
+                                price: product.price,
+                                quantity: qty
+                            });
+                        }
+                        newProductsAdded += qty;
+                    }
+                }
+            });
+            
+            if (newProductsAdded === 0) {
+                alert('Debe seleccionar al menos un producto');
+                return;
+            }
+            
+            // Recalcular el total de la orden
+            const newTotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            order.total = newTotal;
+            
+            // Guardar datos
+            saveData();
+            
+            // Cerrar modal
+            document.getElementById('addMoreProductsModal').style.display = 'none';
+            
+            // Mostrar confirmación
+            alert(`✓ Se agregaron ${newProductsAdded} producto(s) al Pedido #${orderId}\n✓ Nuevo total: S/ ${newTotal.toFixed(2)}`);
+            
+            // Limpiar el formulario
+            currentOrder.items = [];
+            currentOrder.customerName = '';
+            currentOrder.existingOrderId = null;
+            document.getElementById('customerName').value = '';
+            
+            // Actualizar vistas
+            loadCurrentOrders();
+            loadHistory();
+            loadStatistics();
+        }
+        
         // Cargar pedidos actuales
         function loadCurrentOrders() {
             try {
@@ -1847,11 +2027,14 @@
                         <div class="payment-method">
                             <strong>Método de pago:</strong> ${paymentText}
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-                            <div class="status ${order.status}">${order.status === 'pagado' ? 'Pagado' : 'Pendiente'}</div>
+                        <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                            <div class="status ${order.status}" style="flex: 1;">${order.status === 'pagado' ? 'Pagado' : 'Pendiente'}</div>
                             ${order.status === 'pendiente' ? `
+                                <button class="btn btn-info btn-add-more" data-id="${order.id}" style="padding: 5px 12px; font-size: 0.85rem;">
+                                    ➕ Agregar Más
+                                </button>
                                 <button class="btn btn-success btn-mark-paid" data-id="${order.id}" style="padding: 5px 15px; font-size: 0.9rem;">
-                                    Marcar como Pagado
+                                    Pagar
                                 </button>
                             ` : ''}
                         </div>
@@ -1859,12 +2042,19 @@
                     
                     currentOrdersList.appendChild(orderCard);
                     
-                    // Evento para marcar como pagado
+                    // Eventos para botones
                     if (order.status === 'pendiente') {
                         const markPaidBtn = orderCard.querySelector('.btn-mark-paid');
+                        const addMoreBtn = orderCard.querySelector('.btn-add-more');
+                        
                         markPaidBtn.addEventListener('click', function() {
                             const orderId = parseInt(this.getAttribute('data-id'));
                             markOrderAsPaid(orderId);
+                        });
+                        
+                        addMoreBtn.addEventListener('click', function() {
+                            const orderId = parseInt(this.getAttribute('data-id'));
+                            loadExistingOrderForAddingProducts(orderId);
                         });
                     }
                 });
@@ -2711,6 +2901,36 @@
         }
         
         // Configurar eventos del modal de pago
+        // Configurar modal para agregar más productos
+        function setupAddMoreProductsModal() {
+            const modal = document.getElementById('addMoreProductsModal');
+            const closeBtn = document.getElementById('closeAddMoreProductsModal');
+            const confirmBtn = document.getElementById('confirmAddMoreProducts');
+            const cancelBtn = document.getElementById('cancelAddMoreProducts');
+            
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                currentOrder.existingOrderId = null;
+            });
+            
+            cancelBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                currentOrder.existingOrderId = null;
+            });
+            
+            confirmBtn.addEventListener('click', function() {
+                confirmAddMoreProducts();
+            });
+            
+            // Cerrar modal al hacer clic fuera
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                    currentOrder.existingOrderId = null;
+                }
+            });
+        }
+        
         function setupPaymentModal() {
             const paymentModal = document.getElementById('paymentModal');
             const closePaymentModal = document.getElementById('closePaymentModal');
