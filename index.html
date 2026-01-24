@@ -1119,6 +1119,34 @@
         </div>
     </div>
     
+    <!-- Modal para detalles de productos de un día -->
+    <div class="modal" id="dayDetailsModal">
+        <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <span class="close-modal" id="closeDayDetailsModal">&times;</span>
+            <h3 class="modal-title" id="dayDetailsTitle">Detalles del Día</h3>
+            
+            <div style="margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 8px;">
+                <p id="dayDetailsSummary" style="color: #666; margin: 0;"></p>
+            </div>
+            
+            <div class="table-container">
+                <h4 style="margin-bottom: 15px;">Productos Vendidos</h4>
+                <table id="dayDetailsTable">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dayDetailsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
     <!-- Modal para reporte semanal detallado -->
     <div class="modal" id="weeklyReportModal">
         <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
@@ -1251,6 +1279,20 @@
             weeklyReportModal.addEventListener('click', function(event) {
                 if (event.target === weeklyReportModal) {
                     weeklyReportModal.style.display = 'none';
+                }
+            });
+            
+            // Configurar eventos del modal de detalles de día
+            const dayDetailsModal = document.getElementById('dayDetailsModal');
+            const closeDayDetailsModal = document.getElementById('closeDayDetailsModal');
+            
+            closeDayDetailsModal.addEventListener('click', function() {
+                dayDetailsModal.style.display = 'none';
+            });
+            
+            dayDetailsModal.addEventListener('click', function(event) {
+                if (event.target === dayDetailsModal) {
+                    dayDetailsModal.style.display = 'none';
                 }
             });
             
@@ -1956,6 +1998,104 @@
             }
         }
         
+        // Obtener detalles de productos de un día específico
+        function getDayProductDetails(dayName) {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const firstDayOfWeek = new Date(today);
+            firstDayOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+            
+            const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            const dayIndex = daysOfWeek.indexOf(dayName);
+            
+            const targetDate = new Date(firstDayOfWeek);
+            targetDate.setDate(firstDayOfWeek.getDate() + dayIndex);
+            
+            // Agrupar productos del día
+            const productDetails = {};
+            let totalOrders = 0;
+            let totalSales = 0;
+            
+            orders.forEach(order => {
+                if (order.status === 'pagado') {
+                    const dateStr = order.date.replace(' ', 'T');
+                    const orderDate = new Date(dateStr);
+                    
+                    if (isNaN(orderDate.getTime())) return;
+                    
+                    // Comparar solo la fecha (año, mes, día)
+                    if (orderDate.getFullYear() === targetDate.getFullYear() &&
+                        orderDate.getMonth() === targetDate.getMonth() &&
+                        orderDate.getDate() === targetDate.getDate()) {
+                        
+                        totalOrders++;
+                        totalSales += parseFloat(order.total) || 0;
+                        
+                        // Agregar productos
+                        order.items.forEach(item => {
+                            const productName = item.productName;
+                            if (!productDetails[productName]) {
+                                productDetails[productName] = {
+                                    quantity: 0,
+                                    price: item.price,
+                                    total: 0
+                                };
+                            }
+                            productDetails[productName].quantity += item.quantity;
+                            productDetails[productName].total += (item.price * item.quantity);
+                        });
+                    }
+                }
+            });
+            
+            return {
+                dayName: dayName,
+                totalOrders: totalOrders,
+                totalSales: totalSales,
+                products: productDetails
+            };
+        }
+        
+        // Mostrar detalles de productos de un día
+        function showDayDetails(dayName) {
+            const dayData = getDayProductDetails(dayName);
+            const modal = document.getElementById('dayDetailsModal');
+            const title = document.getElementById('dayDetailsTitle');
+            const summary = document.getElementById('dayDetailsSummary');
+            const tbody = document.getElementById('dayDetailsBody');
+            
+            title.textContent = `Detalles del ${dayData.dayName}`;
+            summary.innerHTML = `
+                <strong>Total de Pedidos:</strong> ${dayData.totalOrders} | 
+                <strong>Ingresos:</strong> S/ ${dayData.totalSales.toFixed(2)} | 
+                <strong>Ticket Promedio:</strong> S/ ${dayData.totalOrders > 0 ? (dayData.totalSales / dayData.totalOrders).toFixed(2) : '0.00'}
+            `;
+            
+            tbody.innerHTML = '';
+            
+            // Ordenar productos alfabéticamente
+            const sortedProducts = Object.entries(dayData.products).sort((a, b) => a[0].localeCompare(b[0]));
+            
+            sortedProducts.forEach(([productName, details]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${productName}</strong></td>
+                    <td style="text-align: center;">${details.quantity.toFixed(2)}</td>
+                    <td>S/ ${details.price.toFixed(2)}</td>
+                    <td><strong>S/ ${details.total.toFixed(2)}</strong></td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            if (sortedProducts.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="4" style="text-align: center; color: #999; padding: 20px;">No hay datos</td>`;
+                tbody.appendChild(row);
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
         // Obtener datos de la semana actual (por día)
         function getWeeklyData() {
             const today = new Date();
@@ -2049,6 +2189,13 @@
                                     return 'S/ ' + value.toFixed(2);
                                 }
                             }
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const dayName = days[index];
+                            showDayDetails(dayName);
                         }
                     }
                 }
