@@ -1,0 +1,2417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pollos a la Brasa - Sistema de Gestión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --secondary: #2E8B57;
+            --light: #F7F7F7;
+            --dark: #333333;
+            --warning: #FFC107;
+            --danger: #DC3545;
+            --success: #28A745;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(to right, var(--primary), #FF8C42);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+        }
+        
+        .logo h1 {
+            font-size: 1.8rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-logout {
+            background-color: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background-color: rgba(255,255,255,0.3);
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab:hover {
+            background-color: rgba(255,107,53,0.1);
+        }
+        
+        .tab.active {
+            background-color: rgba(255,107,53,0.1);
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+            border-left: 5px solid var(--primary);
+            padding-left: 15px;
+        }
+        
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .col {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #e55a2b;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #267a4a;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: var(--dark);
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        
+        tbody tr.clickable {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        tbody tr.clickable:hover {
+            background-color: rgba(255, 107, 53, 0.1);
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f9f9f9;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status.paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .orders-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .order-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .order-type {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .order-type.table {
+            background-color: #e7f1ff;
+            color: #0056cc;
+        }
+        
+        .order-type.takeaway {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .order-details {
+            margin-bottom: 15px;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #eee;
+        }
+        
+        .payment-method {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .statistics-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+        
+        .stat-icon.income {
+            background-color: var(--success);
+        }
+        
+        .stat-icon.orders {
+            background-color: var(--primary);
+        }
+        
+        .stat-icon.tables {
+            background-color: var(--secondary);
+        }
+        
+        .stat-icon.takeaway {
+            background-color: var(--warning);
+        }
+        
+        .stat-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .stat-info p {
+            color: #666;
+        }
+        
+        .chart-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-modal:hover {
+            color: var(--dark);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .product-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .product-card.selected {
+            border-color: var(--primary);
+        }
+        
+        .product-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .product-price {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .quantity-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .quantity-input {
+            width: 40px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        
+        .selected-items {
+            margin-top: 25px;
+        }
+        
+        .selected-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .selected-item:last-child {
+            border-bottom: none;
+        }
+        
+        .selected-item-info {
+            flex: 1;
+        }
+        
+        .selected-item-name {
+            font-weight: 500;
+        }
+        
+        .selected-item-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .selected-item-price {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .remove-item {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+            }
+            
+            .col {
+                width: 100%;
+            }
+            
+            .logo h1 {
+                font-size: 1.4rem;
+            }
+            
+            .orders-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-drumstick-bite"></i>
+                <div>
+                    <h1>Pollos a la Brasa</h1>
+                    <p>Sistema de Gestión de Pedidos</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div>
+                    <strong>Administrador</strong>
+                    <p>Modo administrador</p>
+                </div>
+                <button class="btn-logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Salir
+                </button>
+            </div>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="orders">Registrar Pedidos</div>
+            <div class="tab" data-tab="current-orders">Pedidos Actuales</div>
+            <div class="tab" data-tab="history">Historial</div>
+            <div class="tab" data-tab="statistics">Estadísticas</div>
+            <div class="tab" data-tab="admin">Administración</div>
+        </div>
+        
+        <!-- Tab: Registrar Pedidos -->
+        <div class="tab-content active" id="orders">
+            <h2 class="section-title">Registrar Nuevo Pedido</h2>
+            
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="orderType">Tipo de Pedido</label>
+                        <select id="orderType">
+                            <option value="table">Para Mesa</option>
+                            <option value="takeaway">Para Llevar</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="tableGroup">
+                        <label for="tableNumber">Número de Mesa</label>
+                        <select id="tableNumber">
+                            <option value="1">Mesa 1</option>
+                            <option value="2">Mesa 2</option>
+                            <option value="3">Mesa 3</option>
+                            <option value="4">Mesa 4</option>
+                            <option value="5">Mesa 5</option>
+                            <option value="6">Mesa 6</option>
+                            <option value="7">Mesa 7</option>
+                            <option value="8">Mesa 8</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="customerGroup">
+                        <label for="customerName">Nombre del Cliente</label>
+                        <input type="text" id="customerName" placeholder="Ingrese nombre del cliente">
+                    </div>
+                    
+                    <!-- Campo de método de pago oculto - se selecciona al marcar como pagado -->
+                    <div class="form-group" style="display: none;">
+                        <label>Método de Pago</label>
+                        <div style="display: flex; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="radio" name="paymentMethod" value="cash" checked> Efectivo
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="radio" name="paymentMethod" value="yape"> Yape
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="radio" name="paymentMethod" value="card"> Tarjeta
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <h3 style="margin-bottom: 15px;">Productos Disponibles</h3>
+                    <div class="products-grid">
+                        <!-- Los productos se cargarán dinámicamente con JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col">
+                    <h3 class="section-title">Pedido Actual</h3>
+                    <div class="selected-items" id="selectedItems">
+                        <!-- Los productos seleccionados aparecerán aquí -->
+                        <p style="text-align: center; color: #999; padding: 20px;">No hay productos seleccionados aún</p>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                        <div>
+                            <h3>Total: S/ <span id="totalAmount">0.00</span></h3>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-danger" id="clearOrder">Limpiar Pedido</button>
+                            <button class="btn btn-success" id="saveOrder">Guardar Pedido</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Pedidos Actuales -->
+        <div class="tab-content" id="current-orders">
+            <h2 class="section-title">Pedidos en Curso</h2>
+            <div class="orders-container" id="currentOrdersList">
+                <!-- Los pedidos actuales se cargarán aquí dinámicamente -->
+                <p style="text-align: center; color: #999; padding: 20px;">No hay pedidos en curso</p>
+            </div>
+        </div>
+        
+        <!-- Tab: Historial -->
+        <div class="tab-content" id="history">
+            <h2 class="section-title">Historial de Pedidos</h2>
+            <div class="table-container">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Tipo</th>
+                            <th>Mesa</th>
+                            <th>Productos</th>
+                            <th>Total</th>
+                            <th>Pago</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <!-- El historial se cargará aquí dinámicamente -->
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: #999; padding: 20px;">
+                                No hay historial disponible
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Tab: Estadísticas -->
+        <div class="tab-content" id="statistics">
+            <h2 class="section-title">Estadísticas y Reportes</h2>
+            
+            <div class="statistics-container">
+                <div class="stat-card">
+                    <div class="stat-icon income">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalIncome">S/ 0.00</h3>
+                        <p>Ingresos Totales</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon orders">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalOrders">0</h3>
+                        <p>Total de Pedidos</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon tables">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="tableOrders">0</h3>
+                        <p>Pedidos en Mesa</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon takeaway">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="takeawayOrders">0</h3>
+                        <p>Pedidos para Llevar</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <h3 style="margin-bottom: 20px;">📅 Ventas de la Semana Actual (Por Día)</h3>
+                <canvas id="weeklyChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h3 style="margin-bottom: 20px;">Ventas por Tipo de Producto</h3>
+                <canvas id="salesChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h3 style="margin-bottom: 20px;">Métodos de Pago Más Utilizados</h3>
+                <canvas id="paymentChart"></canvas>
+            </div>
+            
+            <!-- Historial de semanas anteriores -->
+            <div class="table-container" style="margin-top: 30px;">
+                <h3 style="margin-bottom: 20px;">📊 Historial de Ventas Semanales</h3>
+                <table id="weeklySalesTable">
+                    <thead>
+                        <tr>
+                            <th>Semana</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Total de Pedidos</th>
+                            <th>Ingresos (S/)</th>
+                            <th>Ticket Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weeklySalesBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #999; padding: 20px;">
+                                Cargando historial...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Tab: Administración -->
+        <div class="tab-content" id="admin">
+            <h2 class="section-title">Panel de Administración</h2>
+            
+            <div class="row">
+                <div class="col">
+                    <h3 style="margin-bottom: 20px;">Gestión de Productos</h3>
+                    <div class="table-container">
+                        <table id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <!-- Los productos se cargarán aquí dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="addProductBtn" style="margin-top: 15px;">
+                        <i class="fas fa-plus"></i> Agregar Producto
+                    </button>
+                </div>
+                
+                <div class="col">
+                    <h3 style="margin-bottom: 20px;">Gestión de Mesas</h3>
+                    <div class="table-container">
+                        <table id="tablesTable">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablesTableBody">
+                                <!-- Las mesas se cargarán aquí dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="addTableBtn" style="margin-top: 15px;">
+                        <i class="fas fa-plus"></i> Agregar Mesa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar/editar productos -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeProductModal">&times;</span>
+            <h3 class="modal-title" id="productModalTitle">Agregar Producto</h3>
+            
+            <div class="form-group">
+                <label for="productName">Nombre del Producto</label>
+                <input type="text" id="productName" placeholder="Ej: 1/4 de Pollo">
+            </div>
+            
+            <div class="form-group">
+                <label for="productCategory">Categoría</label>
+                <select id="productCategory">
+                    <option value="pollo">Pollo a la Brasa</option>
+                    <option value="bebida">Bebidas</option>
+                    <option value="extra">Extras</option>
+                    <option value="combo">Combos</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="productPrice">Precio (S/)</label>
+                <input type="number" id="productPrice" min="0" step="0.01" placeholder="0.00">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
+                <button class="btn btn-secondary" id="cancelProduct">Cancelar</button>
+                <button class="btn btn-primary" id="saveProduct">Guardar Producto</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar/editar mesas -->
+    <div class="modal" id="tableModal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeTableModal">&times;</span>
+            <h3 class="modal-title" id="tableModalTitle">Agregar Mesa</h3>
+            
+            <div class="form-group">
+                <label for="newTableNumber">Número de Mesa</label>
+                <input type="number" id="newTableNumber" min="1" placeholder="Ej: 9">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
+                <button class="btn btn-secondary" id="cancelTable">Cancelar</button>
+                <button class="btn btn-primary" id="saveTable">Guardar Mesa</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para seleccionar método de pago -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <span class="close-modal" id="closePaymentModal">&times;</span>
+            <h3 class="modal-title" style="margin-bottom: 10px;">Seleccionar Método de Pago</h3>
+            <p id="paymentModalOrderInfo" style="color: #666; margin-bottom: 20px;"></p>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn" id="paymentCash" style="background: #28A745; padding: 15px; font-size: 16px; border-radius: 8px;">
+                    💵 Efectivo
+                </button>
+                <button class="btn" id="paymentYape" style="background: #0066FF; padding: 15px; font-size: 16px; border-radius: 8px;">
+                    📱 Yape
+                </button>
+                <button class="btn" id="paymentCard" style="background: #6C757D; padding: 15px; font-size: 16px; border-radius: 8px;">
+                    💳 Tarjeta
+                </button>
+            </div>
+            
+            <button class="btn btn-secondary" id="cancelPayment" style="margin-top: 15px; width: 100%;">Cancelar</button>
+        </div>
+    </div>
+    
+    <!-- Modal para reporte semanal detallado -->
+    <div class="modal" id="weeklyReportModal">
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <span class="close-modal" id="closeWeeklyReportModal">&times;</span>
+            <h3 class="modal-title" id="weeklyReportTitle">Reporte Semanal</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <p id="weeklyReportInfo" style="color: #666; margin-bottom: 15px;"></p>
+                <canvas id="weeklyReportChart"></canvas>
+            </div>
+            
+            <div class="table-container" style="margin-top: 20px;">
+                <h4 style="margin-bottom: 15px;">Detalles por Día</h4>
+                <table id="weeklyReportTable">
+                    <thead>
+                        <tr>
+                            <th>Día</th>
+                            <th>Pedidos</th>
+                            <th>Ingresos (S/)</th>
+                            <th>Ticket Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weeklyReportBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Datos iniciales de la aplicación
+        const defaultProducts = [
+            { id: 1, name: "1/8 de Pollo", category: "pollo", price: 8.00 },
+            { id: 2, name: "1/4 de Pollo", category: "pollo", price: 15.00 },
+            { id: 3, name: "1/2 Pollo", category: "pollo", price: 28.00 },
+            { id: 4, name: "3/4 de Pollo", category: "pollo", price: 40.00 },
+            { id: 5, name: "Pollo Entero", category: "pollo", price: 52.00 },
+            { id: 6, name: "Inca Kola 500ml", category: "bebida", price: 4.00 },
+            { id: 7, name: "Coca Cola 500ml", category: "bebida", price: 4.00 },
+            { id: 8, name: "Agua Mineral 500ml", category: "bebida", price: 2.50 },
+            { id: 9, name: "Porción de Papas", category: "extra", price: 6.00 },
+            { id: 10, name: "Ensalada", category: "extra", price: 5.00 },
+            { id: 11, name: "Salsa Especial", category: "extra", price: 1.50 }
+        ];
+        
+        const defaultTables = [
+            { id: 1, number: "1", status: "disponible" },
+            { id: 2, number: "2", status: "disponible" },
+            { id: 3, number: "3", status: "disponible" },
+            { id: 4, number: "4", status: "disponible" },
+            { id: 5, number: "5", status: "disponible" },
+            { id: 6, number: "6", status: "disponible" },
+            { id: 7, number: "7", status: "disponible" },
+            { id: 8, number: "8", status: "disponible" }
+        ];
+        
+        // Cargar datos del localStorage o usar datos por defecto
+        function loadData() {
+            const savedProducts = localStorage.getItem('products');
+            const savedTables = localStorage.getItem('tables');
+            const savedOrders = localStorage.getItem('orders');
+            
+            window.products = savedProducts ? JSON.parse(savedProducts) : defaultProducts;
+            window.tables = savedTables ? JSON.parse(savedTables) : defaultTables;
+            window.orders = savedOrders ? JSON.parse(savedOrders) : [];
+        }
+        
+        // Guardar datos en localStorage
+        function saveData() {
+            try {
+                localStorage.setItem('products', JSON.stringify(products));
+                localStorage.setItem('tables', JSON.stringify(tables));
+                localStorage.setItem('orders', JSON.stringify(orders));
+                console.log('✓ Datos guardados correctamente en localStorage');
+            } catch (error) {
+                console.error('Error al guardar datos:', error);
+                alert('Error: No se pudieron guardar los datos');
+            }
+        }
+        
+        // Cargar datos al inicio
+        loadData();
+        
+        let currentOrder = {
+            type: "table",
+            tableNumber: "1",
+            customerName: "",
+            paymentMethod: "cash",
+            items: []
+        };
+        
+        // Variables globales para edición
+        let editingProductId = null;
+        let editingTableId = null;
+        
+        // Inicialización de la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar productos en la interfaz
+            loadProducts();
+            
+            // Cargar mesas en la interfaz
+            loadTables();
+            
+            // Cargar pedidos actuales
+            loadCurrentOrders();
+            
+            // Cargar historial
+            loadHistory();
+            
+            // Cargar estadísticas
+            loadStatistics();
+            
+            // Configurar navegación por pestañas
+            setupTabs();
+            
+            // Configurar eventos del formulario de pedidos
+            setupOrderForm();
+            
+            // Configurar eventos del modal de pago
+            setupPaymentModal();
+            
+            // Configurar eventos del modal de reporte semanal
+            const weeklyReportModal = document.getElementById('weeklyReportModal');
+            const closeWeeklyReportModal = document.getElementById('closeWeeklyReportModal');
+            
+            closeWeeklyReportModal.addEventListener('click', function() {
+                weeklyReportModal.style.display = 'none';
+            });
+            
+            weeklyReportModal.addEventListener('click', function(event) {
+                if (event.target === weeklyReportModal) {
+                    weeklyReportModal.style.display = 'none';
+                }
+            });
+            
+            // Configurar eventos de administración
+            setupAdminEvents();
+            
+            // Actualizar UI según tipo de pedido
+            updateOrderTypeUI();
+        });
+        
+        // Configurar navegación por pestañas
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    console.log('Tab clicked:', tabId);
+                    
+                    // Remover clase active de todas las pestañas
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Agregar clase active a la pestaña seleccionada
+                    this.classList.add('active');
+                    const tabContent = document.getElementById(tabId);
+                    if (tabContent) {
+                        tabContent.classList.add('active');
+                        console.log('Tab content found and activated:', tabId);
+                    } else {
+                        console.error('Tab content not found:', tabId);
+                    }
+                    
+                    // Actualizar datos si es necesario
+                    if (tabId === 'current-orders') {
+                        console.log('Loading current orders...');
+                        loadCurrentOrders();
+                    } else if (tabId === 'history') {
+                        console.log('Loading history...');
+                        loadHistory();
+                    } else if (tabId === 'statistics') {
+                        console.log('Loading statistics...');
+                        loadStatistics();
+                    } else if (tabId === 'admin') {
+                        console.log('Loading admin data...');
+                        loadProductsTable();
+                        loadTablesTable();
+                    }
+                });
+            });
+            
+            // Botón de cerrar sesión
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (confirm('¿Está seguro de que desea salir del sistema?')) {
+                    alert('Sesión cerrada. En una aplicación real, esto redirigiría al login.');
+                    // En una aplicación real, aquí redirigirías al login
+                }
+            });
+        }
+        
+        // Cargar productos en la sección de pedidos
+        function loadProducts() {
+            const productsGrid = document.querySelector('.products-grid');
+            productsGrid.innerHTML = '';
+            
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.setAttribute('data-id', product.id);
+                
+                // Icono según categoría
+                let icon = 'fa-drumstick-bite';
+                if (product.category === 'bebida') icon = 'fa-wine-bottle';
+                if (product.category === 'extra') icon = 'fa-utensils';
+                if (product.category === 'combo') icon = 'fa-box';
+                
+                productCard.innerHTML = `
+                    <i class="fas ${icon}" style="font-size: 2rem; color: var(--primary); margin-bottom: 10px;"></i>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">S/ ${product.price.toFixed(2)}</div>
+                    <div class="quantity-control">
+                        <button class="quantity-btn minus-btn" data-id="${product.id}">-</button>
+                        <input type="number" class="quantity-input" id="qty-${product.id}" value="0" min="0">
+                        <button class="quantity-btn plus-btn" data-id="${product.id}">+</button>
+                    </div>
+                `;
+                
+                productsGrid.appendChild(productCard);
+                
+                // Eventos para los botones de cantidad
+                const minusBtn = productCard.querySelector('.minus-btn');
+                const plusBtn = productCard.querySelector('.plus-btn');
+                const qtyInput = productCard.querySelector('.quantity-input');
+                
+                minusBtn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    const currentQty = parseInt(qtyInput.value);
+                    if (currentQty > 0) {
+                        qtyInput.value = currentQty - 1;
+                        updateOrderItem(id, parseInt(qtyInput.value));
+                    }
+                });
+                
+                plusBtn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    const currentQty = parseInt(qtyInput.value);
+                    qtyInput.value = currentQty + 1;
+                    updateOrderItem(id, parseInt(qtyInput.value));
+                });
+                
+                qtyInput.addEventListener('change', function() {
+                    const id = parseInt(this.getAttribute('id').split('-')[1]);
+                    updateOrderItem(id, parseInt(this.value) || 0);
+                });
+                
+                // Seleccionar producto al hacer clic en la tarjeta
+                productCard.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('quantity-btn') && !e.target.classList.contains('quantity-input')) {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        const qtyInput = document.getElementById(`qty-${id}`);
+                        const currentQty = parseInt(qtyInput.value);
+                        qtyInput.value = currentQty + 1;
+                        updateOrderItem(id, parseInt(qtyInput.value));
+                    }
+                });
+            });
+        }
+        
+        // Actualizar un item en el pedido actual
+        function updateOrderItem(productId, quantity) {
+            const product = products.find(p => p.id === productId);
+            
+            // Eliminar si la cantidad es 0
+            if (quantity === 0) {
+                currentOrder.items = currentOrder.items.filter(item => item.productId !== productId);
+                updateSelectedItems();
+                return;
+            }
+            
+            // Buscar si el producto ya está en el pedido
+            const existingItem = currentOrder.items.find(item => item.productId === productId);
+            
+            if (existingItem) {
+                // Actualizar cantidad
+                existingItem.quantity = quantity;
+                existingItem.subtotal = existingItem.price * quantity;
+            } else {
+                // Agregar nuevo item
+                currentOrder.items.push({
+                    productId: productId,
+                    name: product.name,
+                    price: product.price,
+                    quantity: quantity,
+                    subtotal: product.price * quantity
+                });
+            }
+            
+            updateSelectedItems();
+        }
+        
+        // Actualizar la lista de items seleccionados
+        function updateSelectedItems() {
+            const selectedItemsContainer = document.getElementById('selectedItems');
+            const totalAmountElement = document.getElementById('totalAmount');
+            
+            if (currentOrder.items.length === 0) {
+                selectedItemsContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No hay productos seleccionados aún</p>';
+                totalAmountElement.textContent = '0.00';
+                return;
+            }
+            
+            selectedItemsContainer.innerHTML = '';
+            let total = 0;
+            
+            currentOrder.items.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'selected-item';
+                
+                itemElement.innerHTML = `
+                    <div class="selected-item-info">
+                        <div class="selected-item-name">${item.name}</div>
+                        <div class="selected-item-details">S/ ${item.price.toFixed(2)} x ${item.quantity}</div>
+                    </div>
+                    <div>
+                        <span class="selected-item-price">S/ ${(item.price * item.quantity).toFixed(2)}</span>
+                        <button class="remove-item" data-id="${item.productId}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                selectedItemsContainer.appendChild(itemElement);
+                total += item.price * item.quantity;
+                
+                // Evento para eliminar item
+                const removeBtn = itemElement.querySelector('.remove-item');
+                removeBtn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    document.getElementById(`qty-${id}`).value = 0;
+                    updateOrderItem(id, 0);
+                });
+            });
+            
+            totalAmountElement.textContent = total.toFixed(2);
+        }
+        
+        // Configurar eventos del formulario de pedidos
+        function setupOrderForm() {
+            // Cambiar tipo de pedido
+            document.getElementById('orderType').addEventListener('change', function() {
+                currentOrder.type = this.value;
+                updateOrderTypeUI();
+            });
+            
+            // Cambiar número de mesa
+            document.getElementById('tableNumber').addEventListener('change', function() {
+                currentOrder.tableNumber = this.value;
+            });
+            
+            // Cambiar nombre del cliente
+            document.getElementById('customerName').addEventListener('input', function() {
+                currentOrder.customerName = this.value;
+            });
+            
+            // Cambiar método de pago
+            document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        currentOrder.paymentMethod = this.value;
+                    }
+                });
+            });
+            
+            // Limpiar pedido
+            document.getElementById('clearOrder').addEventListener('click', function() {
+                if (confirm('¿Está seguro de que desea limpiar el pedido actual?')) {
+                    currentOrder.items = [];
+                    updateSelectedItems();
+                    
+                    // Restablecer cantidades en la interfaz
+                    document.querySelectorAll('.quantity-input').forEach(input => {
+                        input.value = 0;
+                    });
+                }
+            });
+            
+            // Guardar pedido
+            document.getElementById('saveOrder').addEventListener('click', function() {
+                if (currentOrder.items.length === 0) {
+                    alert('Debe agregar al menos un producto al pedido.');
+                    return;
+                }
+                
+                if (!currentOrder.customerName.trim()) {
+                    alert('Debe ingresar el nombre del cliente.');
+                    document.getElementById('customerName').focus();
+                    return;
+                }
+                
+                // Calcular total
+                const total = currentOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                
+                // Crear nuevo pedido
+                const newOrder = {
+                    id: orders.length + 1,
+                    customerName: currentOrder.customerName,
+                    type: currentOrder.type,
+                    tableNumber: currentOrder.type === 'table' ? currentOrder.tableNumber : null,
+                    items: [...currentOrder.items],
+                    total: total,
+                    paymentMethod: currentOrder.paymentMethod,
+                    status: 'pendiente',
+                    date: new Date().toISOString().slice(0, 16).replace('T', ' ')
+                };
+                
+                // Agregar a la lista de pedidos
+                orders.push(newOrder);
+                
+                // Guardar datos en localStorage
+                saveData();
+                
+                // Actualizar estado de la mesa si es pedido en mesa
+                if (currentOrder.type === 'table') {
+                    const table = tables.find(t => t.number === currentOrder.tableNumber);
+                    if (table) {
+                        table.status = 'ocupada';
+                        saveData();
+                    }
+                }
+                
+                // Mostrar confirmación
+                alert(`Pedido registrado exitosamente.\nTotal: S/ ${total.toFixed(2)}`);
+                
+                // Limpiar formulario
+                currentOrder.items = [];
+                currentOrder.customerName = '';
+                document.getElementById('customerName').value = '';
+                updateSelectedItems();
+                
+                // Restablecer cantidades en la interfaz
+                document.querySelectorAll('.quantity-input').forEach(input => {
+                    input.value = 0;
+                });
+                
+                // Actualizar la vista de pedidos actuales
+                loadCurrentOrders();
+            });
+        }
+        
+        // Actualizar UI según tipo de pedido
+        function updateOrderTypeUI() {
+            const orderType = document.getElementById('orderType').value;
+            const tableGroup = document.getElementById('tableGroup');
+            const customerGroup = document.getElementById('customerGroup');
+            
+            if (orderType === 'table') {
+                tableGroup.style.display = 'block';
+                customerGroup.querySelector('label').textContent = 'Nombre del Cliente (Opcional)';
+            } else {
+                tableGroup.style.display = 'none';
+                customerGroup.querySelector('label').textContent = 'Nombre del Cliente';
+            }
+        }
+        
+        // Cargar pedidos actuales
+        function loadCurrentOrders() {
+            try {
+                const currentOrdersList = document.getElementById('currentOrdersList');
+                console.log('currentOrdersList element:', currentOrdersList);
+                
+                if (!currentOrdersList) {
+                    console.error('currentOrdersList element not found!');
+                    return;
+                }
+                
+                // Filtrar pedidos pendientes y de hoy
+                const today = new Date().toISOString().slice(0, 10);
+                const currentOrders = orders.filter(order => 
+                    order.status === 'pendiente' || order.date.includes(today)
+                );
+                console.log('Current orders found:', currentOrders.length);
+                
+                if (currentOrders.length === 0) {
+                    currentOrdersList.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No hay pedidos en curso</p>';
+                    return;
+                }
+                
+                currentOrdersList.innerHTML = '';
+                
+                currentOrders.forEach(order => {
+                    const orderCard = document.createElement('div');
+                    orderCard.className = 'order-card';
+                    
+                    // Formatear fecha
+                    const orderDate = new Date(order.date);
+                    const formattedDate = orderDate.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    // Método de pago
+                    let paymentText = '';
+                    if (order.paymentMethod === 'cash') paymentText = 'Efectivo';
+                    else if (order.paymentMethod === 'yape') paymentText = 'Yape';
+                    else if (order.paymentMethod === 'card') paymentText = 'Tarjeta';
+                    
+                    orderCard.innerHTML = `
+                        <div class="order-header">
+                            <div>
+                                <strong>Pedido #${order.id}</strong>
+                                <div style="font-size: 0.9rem; color: #666;">${formattedDate}</div>
+                            </div>
+                            <div class="order-type ${order.type}">${order.type === 'table' ? 'Mesa ' + order.tableNumber : 'Para Llevar'}</div>
+                        </div>
+                        <div class="order-details">
+                            <div style="margin-bottom: 10px;"><strong>Cliente:</strong> ${order.customerName}</div>
+                            ${order.items.map(item => `
+                                <div class="order-item">
+                                    <span>${item.quantity}x ${item.name}</span>
+                                    <span>S/ ${(item.price * item.quantity).toFixed(2)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="order-total">
+                            <span>Total</span>
+                            <span>S/ ${order.total.toFixed(2)}</span>
+                        </div>
+                        <div class="payment-method">
+                            <strong>Método de pago:</strong> ${paymentText}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                            <div class="status ${order.status}">${order.status === 'pagado' ? 'Pagado' : 'Pendiente'}</div>
+                            ${order.status === 'pendiente' ? `
+                                <button class="btn btn-success btn-mark-paid" data-id="${order.id}" style="padding: 5px 15px; font-size: 0.9rem;">
+                                    Marcar como Pagado
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    currentOrdersList.appendChild(orderCard);
+                    
+                    // Evento para marcar como pagado
+                    if (order.status === 'pendiente') {
+                        const markPaidBtn = orderCard.querySelector('.btn-mark-paid');
+                        markPaidBtn.addEventListener('click', function() {
+                            const orderId = parseInt(this.getAttribute('data-id'));
+                            markOrderAsPaid(orderId);
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error in loadCurrentOrders:', error);
+            }
+        }
+        
+        // Marcar pedido como pagado
+        function markOrderAsPaid(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                // Mostrar modal para seleccionar método de pago
+                const paymentModal = document.getElementById('paymentModal');
+                const paymentInfo = document.getElementById('paymentModalOrderInfo');
+                paymentInfo.innerHTML = `Pedido #${orderId}<br><strong>Total: S/ ${order.total.toFixed(2)}</strong>`;
+                
+                // Guardar el ID del pedido en el modal para uso posterior
+                paymentModal.dataset.orderId = orderId;
+                paymentModal.style.display = 'flex';
+            }
+        }
+        
+        // Completar pago
+        function completePayment(orderId, paymentMethod) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = 'pagado';
+                order.paymentMethod = paymentMethod;
+                
+                // Nombres legibles del método de pago
+                const paymentNames = {
+                    'cash': 'Efectivo',
+                    'yape': 'Yape',
+                    'card': 'Tarjeta'
+                };
+                
+                // Liberar mesa si es pedido en mesa
+                if (order.type === 'table') {
+                    const table = tables.find(t => t.number === order.tableNumber);
+                    if (table) {
+                        table.status = 'disponible';
+                        alert(`✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]}.\n✓ Mesa ${table.number} ahora está disponible.`);
+                    }
+                } else {
+                    alert(`✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]}.`);
+                }
+                
+                // Guardar datos en localStorage
+                saveData();
+                
+                loadCurrentOrders();
+                loadHistory();
+                loadStatistics();
+                loadTables();
+            }
+        }
+        
+        // Cargar historial de pedidos
+        function loadHistory() {
+            try {
+                console.log('Loading history...');
+                const historyTableBody = document.getElementById('historyTableBody');
+                
+                if (!historyTableBody) {
+                    console.error('historyTableBody element not found!');
+                    return;
+                }
+                
+                if (orders.length === 0) {
+                    historyTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: #999; padding: 20px;">
+                                No hay historial disponible
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                historyTableBody.innerHTML = '';
+                
+                // Ordenar pedidos por fecha (más recientes primero)
+                const sortedOrders = [...orders].sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                sortedOrders.forEach(order => {
+                    // Formatear fecha
+                    const orderDate = new Date(order.date);
+                    const formattedDate = orderDate.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    // Tipo de pedido
+                    const orderType = order.type === 'table' ? `Mesa ${order.tableNumber}` : 'Para Llevar';
+                    
+                    // Método de pago
+                    let paymentText = '';
+                    if (order.paymentMethod === 'cash') paymentText = 'Efectivo';
+                    else if (order.paymentMethod === 'yape') paymentText = 'Yape';
+                    else if (order.paymentMethod === 'card') paymentText = 'Tarjeta';
+                    
+                    // Productos
+                    const productsList = order.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formattedDate}</td>
+                        <td>${order.customerName}</td>
+                        <td>${orderType}</td>
+                        <td>${order.tableNumber || '-'}</td>
+                        <td>${productsList}</td>
+                        <td>S/ ${order.total.toFixed(2)}</td>
+                        <td>${paymentText}</td>
+                        <td><span class="status ${order.status}">${order.status === 'pagado' ? 'Pagado' : 'Pedido Guardado'}</span></td>
+                    `;
+                    
+                    historyTableBody.appendChild(row);
+                });
+                console.log('History loaded successfully with', sortedOrders.length, 'orders');
+            } catch (error) {
+                console.error('Error in loadHistory:', error);
+            }
+        }
+        
+        // Cargar estadísticas
+        function loadStatistics() {
+            try {
+                console.log('Loading statistics...');
+                
+                // Calcular total de ingresos
+                const totalIncome = orders
+                    .filter(order => order.status === 'pagado')
+                    .reduce((sum, order) => sum + order.total, 0);
+                
+                const totalIncomeEl = document.getElementById('totalIncome');
+                if (totalIncomeEl) {
+                    totalIncomeEl.textContent = `S/ ${totalIncome.toFixed(2)}`;
+                } else {
+                    console.error('Element totalIncome not found!');
+                }
+                
+                // Calcular total de pedidos
+                const totalOrdersEl = document.getElementById('totalOrders');
+                if (totalOrdersEl) {
+                    totalOrdersEl.textContent = orders.length;
+                } else {
+                    console.error('Element totalOrders not found!');
+                }
+                
+                // Calcular pedidos en mesa
+                const tableOrders = orders.filter(order => order.type === 'table').length;
+                const tableOrdersEl = document.getElementById('tableOrders');
+                if (tableOrdersEl) {
+                    tableOrdersEl.textContent = tableOrders;
+                } else {
+                    console.error('Element tableOrders not found!');
+                }
+                
+                // Calcular pedidos para llevar
+                const takeawayOrders = orders.filter(order => order.type === 'takeaway').length;
+                const takeawayOrdersEl = document.getElementById('takeawayOrders');
+                if (takeawayOrdersEl) {
+                    takeawayOrdersEl.textContent = takeawayOrders;
+                } else {
+                    console.error('Element takeawayOrders not found!');
+                }
+                
+                // Gráfico de ventas por tipo de producto
+                const salesByCategory = {
+                    pollo: 0,
+                    bebida: 0,
+                    extra: 0,
+                    combo: 0
+                };
+                
+                orders.forEach(order => {
+                    order.items.forEach(item => {
+                        const product = products.find(p => p.id === item.productId);
+                        if (product) {
+                            salesByCategory[product.category] += item.price * item.quantity;
+                        }
+                    });
+                });
+                
+                const salesChartEl = document.getElementById('salesChart');
+                if (!salesChartEl) {
+                    console.error('Element salesChart not found!');
+                    return;
+                }
+                
+                const salesCtx = salesChartEl.getContext('2d');
+                if (window.salesChart && typeof window.salesChart.destroy === 'function') {
+                    window.salesChart.destroy();
+                }
+                
+                window.salesChart = new Chart(salesCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Pollo a la Brasa', 'Bebidas', 'Extras', 'Combos'],
+                        datasets: [{
+                            label: 'Ventas (S/)',
+                            data: [salesByCategory.pollo, salesByCategory.bebida, salesByCategory.extra, salesByCategory.combo],
+                            backgroundColor: [
+                                'rgba(255, 107, 53, 0.7)',
+                                'rgba(46, 139, 87, 0.7)',
+                                'rgba(255, 193, 7, 0.7)',
+                                'rgba(220, 53, 69, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgb(255, 107, 53)',
+                                'rgb(46, 139, 87)',
+                                'rgb(255, 193, 7)',
+                                'rgb(220, 53, 69)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'S/ ' + value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Gráfico de métodos de pago
+                const paymentMethods = {
+                    cash: 0,
+                yape: 0,
+                card: 0
+            };
+            
+            orders.forEach(order => {
+                if (paymentMethods[order.paymentMethod] !== undefined) {
+                    paymentMethods[order.paymentMethod]++;
+                }
+            });
+            
+            const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+            if (window.paymentChart && typeof window.paymentChart.destroy === 'function') {
+                window.paymentChart.destroy();
+            }
+            
+            window.paymentChart = new Chart(paymentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Efectivo', 'Yape', 'Tarjeta'],
+                    datasets: [{
+                        label: 'Métodos de Pago',
+                        data: [paymentMethods.cash, paymentMethods.yape, paymentMethods.card],
+                        backgroundColor: [
+                            'rgba(40, 167, 69, 0.7)',
+                            'rgba(0, 123, 255, 0.7)',
+                            'rgba(108, 117, 125, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgb(40, 167, 69)',
+                            'rgb(0, 123, 255)',
+                            'rgb(108, 117, 125)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de ventas por día de la semana actual
+            loadWeeklySalesChart();
+            
+            // Cargar historial de semanas anteriores
+            loadWeeklySalesHistory();
+            
+            } catch (error) {
+                console.error('Error in loadStatistics:', error);
+            }
+        }
+        
+        // Obtener datos de la semana actual (por día)
+        function getWeeklyData() {
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0 = domingo, 1 = lunes, etc.
+            const firstDayOfWeek = new Date(today);
+            firstDayOfWeek.setDate(today.getDate() - dayOfWeek + 1); // Comienza el lunes
+            
+            // Inicializar datos para cada día de la semana
+            const weekData = {
+                'Lunes': { sales: 0, orders: 0 },
+                'Martes': { sales: 0, orders: 0 },
+                'Miércoles': { sales: 0, orders: 0 },
+                'Jueves': { sales: 0, orders: 0 },
+                'Viernes': { sales: 0, orders: 0 },
+                'Sábado': { sales: 0, orders: 0 },
+                'Domingo': { sales: 0, orders: 0 }
+            };
+            
+            const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            
+            // Procesar pedidos pagados
+            orders.forEach(order => {
+                if (order.status === 'pagado') {
+                    const orderDate = new Date(order.date);
+                    const orderDayOfWeek = orderDate.getDay();
+                    
+                    // Verificar si el pedido está en la semana actual
+                    const daysDiff = orderDate.getDate() - firstDayOfWeek.getDate();
+                    if (daysDiff >= 0 && daysDiff <= 6 && orderDate.getMonth() === today.getMonth()) {
+                        const dayName = days[orderDayOfWeek === 0 ? 6 : orderDayOfWeek - 1];
+                        if (weekData[dayName]) {
+                            weekData[dayName].sales += order.total;
+                            weekData[dayName].orders += 1;
+                        }
+                    }
+                }
+            });
+            
+            return { weekData, days };
+        }
+        
+        // Cargar gráfico de ventas semanales
+        function loadWeeklySalesChart() {
+            const { weekData, days } = getWeeklyData();
+            const chartEl = document.getElementById('weeklyChart');
+            
+            if (!chartEl) {
+                console.error('Element weeklyChart not found!');
+                return;
+            }
+            
+            const salesData = days.map(day => weekData[day].sales);
+            const ctx = chartEl.getContext('2d');
+            
+            if (window.weeklyChart && typeof window.weeklyChart.destroy === 'function') {
+                window.weeklyChart.destroy();
+            }
+            
+            window.weeklyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Ingresos (S/)',
+                        data: salesData,
+                        backgroundColor: 'rgba(255, 107, 53, 0.7)',
+                        borderColor: 'rgb(255, 107, 53)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'S/ ' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Cargar historial de semanas anteriores
+        function loadWeeklySalesHistory() {
+            const weeklySalesBody = document.getElementById('weeklySalesBody');
+            
+            if (!weeklySalesBody) {
+                console.error('Element weeklySalesBody not found!');
+                return;
+            }
+            
+            // Agrupar pedidos por semana
+            const weeklyData = {};
+            const today = new Date();
+            
+            orders.filter(order => order.status === 'pagado').forEach(order => {
+                const orderDate = new Date(order.date);
+                const dayOfWeek = orderDate.getDay();
+                const firstDayOfWeek = new Date(orderDate);
+                firstDayOfWeek.setDate(orderDate.getDate() - dayOfWeek + 1);
+                
+                const weekKey = firstDayOfWeek.toISOString().split('T')[0];
+                
+                if (!weeklyData[weekKey]) {
+                    weeklyData[weekKey] = {
+                        startDate: new Date(firstDayOfWeek),
+                        endDate: new Date(firstDayOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000),
+                        orders: 0,
+                        sales: 0,
+                        dayDetails: {}
+                    };
+                }
+                
+                weeklyData[weekKey].orders += 1;
+                weeklyData[weekKey].sales += order.total;
+                
+                // Agrupar por día
+                const dayName = orderDate.toLocaleDateString('es-ES', { weekday: 'long' });
+                if (!weeklyData[weekKey].dayDetails[dayName]) {
+                    weeklyData[weekKey].dayDetails[dayName] = { orders: 0, sales: 0 };
+                }
+                weeklyData[weekKey].dayDetails[dayName].orders += 1;
+                weeklyData[weekKey].dayDetails[dayName].sales += order.total;
+            });
+            
+            // Ordenar por fecha descendente
+            const sortedWeeks = Object.entries(weeklyData).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+            
+            if (sortedWeeks.length === 0) {
+                weeklySalesBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #999; padding: 20px;">
+                            No hay datos disponibles
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            weeklySalesBody.innerHTML = '';
+            
+            sortedWeeks.forEach(([weekKey, weekInfo], index) => {
+                const row = document.createElement('tr');
+                const startDateStr = weekInfo.startDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const endDateStr = weekInfo.endDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const avgTicket = weekInfo.orders > 0 ? (weekInfo.sales / weekInfo.orders).toFixed(2) : 0;
+                
+                // Determinar si es la semana actual
+                const isCurrentWeek = index === 0 && sortedWeeks.length > 0;
+                
+                row.className = 'clickable';
+                row.innerHTML = `
+                    <td>${isCurrentWeek ? '<strong>📌 Semana Actual</strong>' : `Semana ${sortedWeeks.length - index}`}</td>
+                    <td>${startDateStr}</td>
+                    <td>${endDateStr}</td>
+                    <td>${weekInfo.orders}</td>
+                    <td><strong>S/ ${weekInfo.sales.toFixed(2)}</strong></td>
+                    <td>S/ ${avgTicket}</td>
+                `;
+                
+                // Evento click para mostrar reporte detallado
+                row.addEventListener('click', function() {
+                    showWeeklyReport(weekKey, weekInfo, startDateStr, endDateStr);
+                });
+                
+                weeklySalesBody.appendChild(row);
+            });
+        }
+        
+        // Mostrar reporte detallado de una semana
+        function showWeeklyReport(weekKey, weekInfo, startDateStr, endDateStr) {
+            const modal = document.getElementById('weeklyReportModal');
+            const title = document.getElementById('weeklyReportTitle');
+            const info = document.getElementById('weeklyReportInfo');
+            const reportBody = document.getElementById('weeklyReportBody');
+            
+            title.textContent = `Reporte Semanal: ${startDateStr} - ${endDateStr}`;
+            info.innerHTML = `
+                <strong>Total de Pedidos:</strong> ${weekInfo.orders} <br>
+                <strong>Ingresos Totales:</strong> S/ ${weekInfo.sales.toFixed(2)} <br>
+                <strong>Ticket Promedio:</strong> S/ ${(weekInfo.sales / weekInfo.orders).toFixed(2)}
+            `;
+            
+            // Crear tabla de detalles por día
+            reportBody.innerHTML = '';
+            const days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+            
+            days.forEach(day => {
+                const dayCapitalized = day.charAt(0).toUpperCase() + day.slice(1);
+                const dayData = weekInfo.dayDetails[dayCapitalized] || { orders: 0, sales: 0 };
+                
+                const row = document.createElement('tr');
+                const avgTicketDay = dayData.orders > 0 ? (dayData.sales / dayData.orders).toFixed(2) : '0.00';
+                
+                row.innerHTML = `
+                    <td><strong>${dayCapitalized}</strong></td>
+                    <td>${dayData.orders}</td>
+                    <td>S/ ${dayData.sales.toFixed(2)}</td>
+                    <td>S/ ${avgTicketDay}</td>
+                `;
+                
+                reportBody.appendChild(row);
+            });
+            
+            // Crear gráfico de la semana
+            const chartEl = document.getElementById('weeklyReportChart');
+            const salesData = days.map(day => {
+                const dayCapitalized = day.charAt(0).toUpperCase() + day.slice(1);
+                return weekInfo.dayDetails[dayCapitalized]?.sales || 0;
+            });
+            
+            const ctx = chartEl.getContext('2d');
+            if (window.weeklyReportChartInstance && typeof window.weeklyReportChartInstance.destroy === 'function') {
+                window.weeklyReportChartInstance.destroy();
+            }
+            
+            window.weeklyReportChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
+                    datasets: [{
+                        label: 'Ingresos (S/)',
+                        data: salesData,
+                        backgroundColor: 'rgba(255, 107, 53, 0.7)',
+                        borderColor: 'rgb(255, 107, 53)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'S/ ' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            modal.style.display = 'flex';
+        }
+        
+        // Cargar mesas
+        function loadTables() {
+            const tableSelect = document.getElementById('tableNumber');
+            tableSelect.innerHTML = '';
+            
+            tables.forEach(table => {
+                // Verificar si la mesa tiene pedidos pendientes
+                const hasPendingOrder = orders.some(order => 
+                    order.type === 'table' && 
+                    order.tableNumber === table.number && 
+                    order.status === 'pendiente'
+                );
+                
+                const option = document.createElement('option');
+                option.value = table.number;
+                
+                // Si tiene pedido pendiente, mostrar como bloqueada
+                if (hasPendingOrder) {
+                    option.textContent = `Mesa ${table.number} - 🔒 BLOQUEADA`;
+                    option.disabled = true;
+                } else {
+                    option.textContent = `Mesa ${table.number} (${table.status === 'disponible' ? 'Disponible' : 'Ocupada'})`;
+                    option.disabled = false;
+                }
+                
+                tableSelect.appendChild(option);
+            });
+        }
+        
+        // Configurar eventos del modal de pago
+        function setupPaymentModal() {
+            const paymentModal = document.getElementById('paymentModal');
+            const closePaymentModal = document.getElementById('closePaymentModal');
+            const cancelPayment = document.getElementById('cancelPayment');
+            const paymentCash = document.getElementById('paymentCash');
+            const paymentYape = document.getElementById('paymentYape');
+            const paymentCard = document.getElementById('paymentCard');
+            
+            closePaymentModal.addEventListener('click', function() {
+                paymentModal.style.display = 'none';
+            });
+            
+            cancelPayment.addEventListener('click', function() {
+                paymentModal.style.display = 'none';
+            });
+            
+            paymentCash.addEventListener('click', function() {
+                const orderId = parseInt(paymentModal.dataset.orderId);
+                completePayment(orderId, 'cash');
+                paymentModal.style.display = 'none';
+            });
+            
+            paymentYape.addEventListener('click', function() {
+                const orderId = parseInt(paymentModal.dataset.orderId);
+                completePayment(orderId, 'yape');
+                paymentModal.style.display = 'none';
+            });
+            
+            paymentCard.addEventListener('click', function() {
+                const orderId = parseInt(paymentModal.dataset.orderId);
+                completePayment(orderId, 'card');
+                paymentModal.style.display = 'none';
+            });
+        }
+        
+        // Configurar eventos de administración
+        function setupAdminEvents() {
+            // Modal de productos
+            const productModal = document.getElementById('productModal');
+            const addProductBtn = document.getElementById('addProductBtn');
+            const closeProductModal = document.getElementById('closeProductModal');
+            const cancelProduct = document.getElementById('cancelProduct');
+            const saveProduct = document.getElementById('saveProduct');
+            
+            // Abrir modal para agregar producto
+            addProductBtn.addEventListener('click', function() {
+                editingProductId = null;
+                document.getElementById('productModalTitle').textContent = 'Agregar Producto';
+                document.getElementById('productName').value = '';
+                document.getElementById('productCategory').value = 'pollo';
+                document.getElementById('productPrice').value = '';
+                productModal.style.display = 'flex';
+            });
+            
+            // Cerrar modal de producto
+            closeProductModal.addEventListener('click', function() {
+                productModal.style.display = 'none';
+            });
+            
+            cancelProduct.addEventListener('click', function() {
+                productModal.style.display = 'none';
+            });
+            
+            // Guardar producto
+            saveProduct.addEventListener('click', function() {
+                const name = document.getElementById('productName').value.trim();
+                const category = document.getElementById('productCategory').value;
+                const price = parseFloat(document.getElementById('productPrice').value);
+                
+                if (!name) {
+                    alert('Debe ingresar un nombre para el producto.');
+                    return;
+                }
+                
+                if (isNaN(price) || price <= 0) {
+                    alert('Debe ingresar un precio válido para el producto.');
+                    return;
+                }
+                
+                if (editingProductId) {
+                    // Editar producto existente
+                    const product = products.find(p => p.id === editingProductId);
+                    if (product) {
+                        console.log('Editando producto:', editingProductId, 'Nuevo nombre:', name, 'Nuevo precio:', price);
+                        product.name = name;
+                        product.category = category;
+                        product.price = price;
+                    }
+                } else {
+                    // Agregar nuevo producto
+                    const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+                    console.log('Agregando nuevo producto:', name, 'Precio:', price);
+                    products.push({
+                        id: newId,
+                        name: name,
+                        category: category,
+                        price: price
+                    });
+                }
+                
+                // Cerrar modal
+                productModal.style.display = 'none';
+                
+                // Guardar datos en localStorage
+                saveData();
+                
+                // Reiniciar ID de edición
+                editingProductId = null;
+                
+                // Actualizar interfaces
+                loadProducts();
+                loadProductsTable();
+                
+                alert('Producto guardado exitosamente.');
+            });
+            
+            // Modal de mesas
+            const tableModal = document.getElementById('tableModal');
+            const addTableBtn = document.getElementById('addTableBtn');
+            const closeTableModal = document.getElementById('closeTableModal');
+            const cancelTable = document.getElementById('cancelTable');
+            const saveTable = document.getElementById('saveTable');
+            
+            // Abrir modal para agregar mesa
+            addTableBtn.addEventListener('click', function() {
+                editingTableId = null;
+                document.getElementById('tableModalTitle').textContent = 'Agregar Mesa';
+                document.getElementById('newTableNumber').value = '';
+                tableModal.style.display = 'flex';
+            });
+            
+            // Cerrar modal de mesa
+            closeTableModal.addEventListener('click', function() {
+                tableModal.style.display = 'none';
+            });
+            
+            cancelTable.addEventListener('click', function() {
+                tableModal.style.display = 'none';
+            });
+            
+            // Guardar mesa
+            saveTable.addEventListener('click', function() {
+                const number = document.getElementById('newTableNumber').value.trim();
+                
+                if (!number || isNaN(number) || parseInt(number) <= 0) {
+                    alert('Debe ingresar un número válido para la mesa.');
+                    return;
+                }
+                
+                // Verificar si ya existe una mesa con ese número
+                if (tables.some(t => t.number === number && t.id !== editingTableId)) {
+                    alert('Ya existe una mesa con ese número.');
+                    return;
+                }
+                
+                if (editingTableId) {
+                    // Editar mesa existente
+                    const table = tables.find(t => t.id === editingTableId);
+                    if (table) {
+                        table.number = number;
+                    }
+                } else {
+                    // Agregar nueva mesa
+                    const newId = tables.length > 0 ? Math.max(...tables.map(t => t.id)) + 1 : 1;
+                    tables.push({
+                        id: newId,
+                        number: number,
+                        status: 'disponible'
+                    });
+                }
+                
+                // Cerrar modal
+                tableModal.style.display = 'none';
+                
+                // Guardar datos en localStorage
+                saveData();
+                
+                // Reiniciar ID de edición
+                editingTableId = null;
+                
+                // Actualizar interfaces
+                loadTables();
+                loadTablesTable();
+                
+                alert('Mesa guardada exitosamente.');
+            });
+        }
+        
+        // Cargar tabla de productos en administración
+        function loadProductsTable() {
+            const productsTableBody = document.getElementById('productsTableBody');
+            productsTableBody.innerHTML = '';
+            
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                
+                // Icono según categoría
+                let icon = 'fa-drumstick-bite';
+                if (product.category === 'bebida') icon = 'fa-wine-bottle';
+                if (product.category === 'extra') icon = 'fa-utensils';
+                if (product.category === 'combo') icon = 'fa-box';
+                
+                // Nombre de categoría
+                let categoryName = 'Pollo a la Brasa';
+                if (product.category === 'bebida') categoryName = 'Bebidas';
+                if (product.category === 'extra') categoryName = 'Extras';
+                if (product.category === 'combo') categoryName = 'Combos';
+                
+                row.innerHTML = `
+                    <td>
+                        <i class="fas ${icon}" style="margin-right: 10px; color: var(--primary);"></i>
+                        ${product.name}
+                    </td>
+                    <td>${categoryName}</td>
+                    <td>S/ ${product.price.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm edit-product" data-id="${product.id}" style="padding: 5px 10px; margin-right: 5px;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm delete-product" data-id="${product.id}" style="padding: 5px 10px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                productsTableBody.appendChild(row);
+                
+                // Evento para editar producto
+                const editBtn = row.querySelector('.edit-product');
+                editBtn.addEventListener('click', function() {
+                    const productId = parseInt(this.getAttribute('data-id'));
+                    const product = products.find(p => p.id === productId);
+                    
+                    if (product) {
+                        editingProductId = productId;
+                        document.getElementById('productModalTitle').textContent = 'Editar Producto';
+                        document.getElementById('productName').value = product.name;
+                        document.getElementById('productCategory').value = product.category;
+                        document.getElementById('productPrice').value = product.price;
+                        document.getElementById('productModal').style.display = 'flex';
+                    }
+                });
+                
+                // Evento para eliminar producto
+                const deleteBtn = row.querySelector('.delete-product');
+                deleteBtn.addEventListener('click', function() {
+                    const productId = parseInt(this.getAttribute('data-id'));
+                    const product = products.find(p => p.id === productId);
+                    
+                    if (product && confirm(`¿Está seguro de que desea eliminar el producto "${product.name}"?`)) {
+                        // Verificar si el producto está en algún pedido
+                        const isInOrder = orders.some(order => 
+                            order.items.some(item => item.productId === productId)
+                        );
+                        
+                        if (isInOrder) {
+                            alert('No se puede eliminar este producto porque está incluido en uno o más pedidos.');
+                            return;
+                        }
+                        
+                        // Eliminar producto
+                        products = products.filter(p => p.id !== productId);
+                        
+                        // Guardar datos en localStorage
+                        saveData();
+                        
+                        // Actualizar interfaces
+                        loadProducts();
+                        loadProductsTable();
+                        
+                        alert('Producto eliminado exitosamente.');
+                    }
+                });
+            });
+        }
+        
+        // Cargar tabla de mesas en administración
+        function loadTablesTable() {
+            const tablesTableBody = document.getElementById('tablesTableBody');
+            tablesTableBody.innerHTML = '';
+            
+            tables.forEach(table => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>Mesa ${table.number}</td>
+                    <td><span class="status ${table.status === 'disponible' ? 'paid' : 'pending'}">${table.status === 'disponible' ? 'Disponible' : 'Ocupada'}</span></td>
+                    <td>
+                        <button class="btn btn-warning btn-sm edit-table" data-id="${table.id}" style="padding: 5px 10px; margin-right: 5px;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm delete-table" data-id="${table.id}" style="padding: 5px 10px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tablesTableBody.appendChild(row);
+                
+                // Evento para editar mesa
+                const editBtn = row.querySelector('.edit-table');
+                editBtn.addEventListener('click', function() {
+                    const tableId = parseInt(this.getAttribute('data-id'));
+                    const table = tables.find(t => t.id === tableId);
+                    
+                    if (table) {
+                        editingTableId = tableId;
+                        document.getElementById('tableModalTitle').textContent = 'Editar Mesa';
+                        document.getElementById('newTableNumber').value = table.number;
+                        document.getElementById('tableModal').style.display = 'flex';
+                    }
+                });
+                
+                // Evento para eliminar mesa
+                const deleteBtn = row.querySelector('.delete-table');
+                deleteBtn.addEventListener('click', function() {
+                    const tableId = parseInt(this.getAttribute('data-id'));
+                    const table = tables.find(t => t.id === tableId);
+                    
+                    if (table && confirm(`¿Está seguro de que desea eliminar la Mesa ${table.number}?`)) {
+                        // Verificar si hay pedidos para esta mesa
+                        const hasOrders = orders.some(order => 
+                            order.type === 'table' && order.tableNumber === table.number
+                        );
+                        
+                        if (hasOrders) {
+                            alert('No se puede eliminar esta mesa porque tiene pedidos asociados.');
+                            return;
+                        }
+                        
+                        // Eliminar mesa
+                        tables = tables.filter(t => t.id !== tableId);
+                        
+                        // Guardar datos en localStorage
+                        saveData();
+                        
+                        // Actualizar interfaces
+                        loadTables();
+                        loadTablesTable();
+                        
+                        alert('Mesa eliminada exitosamente.');
+                    }
+                });
+            });
+        }
+        
+        // Cerrar modales al hacer clic fuera de ellos
+        window.addEventListener('click', function(event) {
+            const productModal = document.getElementById('productModal');
+            const tableModal = document.getElementById('tableModal');
+            
+            if (event.target === productModal) {
+                productModal.style.display = 'none';
+            }
+            
+            if (event.target === tableModal) {
+                tableModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

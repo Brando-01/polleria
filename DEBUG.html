@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Pollos a la Brasa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #FF6B35;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #FF6B35;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #FF6B35;
+        }
+        button {
+            background: #FF6B35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #ff8c42;
+        }
+        #console {
+            background: #222;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .warning { color: #ff0; }
+        .info { color: #0af; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Debug Panel - Pollos a la Brasa</h1>
+        
+        <div class="section">
+            <h2>Pruebas de Elementos del DOM</h2>
+            <button onclick="testElements()">Verificar Elementos</button>
+            <button onclick="testTabs()">Verificar Pestañas</button>
+            <button onclick="clearConsole()">Limpiar Consola</button>
+        </div>
+
+        <div class="section">
+            <h2>Pruebas de Funciones</h2>
+            <button onclick="simulateTabClick('current-orders')">Click en Pedidos Actuales</button>
+            <button onclick="simulateTabClick('history')">Click en Historial</button>
+            <button onclick="simulateTabClick('statistics')">Click en Estadísticas</button>
+            <button onclick="simulateTabClick('admin')">Click en Administración</button>
+        </div>
+
+        <div class="section">
+            <h2>Consola de Debug</h2>
+            <div id="console"></div>
+        </div>
+    </div>
+
+    <script>
+        // Redirigir console.log a nuestro div
+        const consoleDiv = document.getElementById('console');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addToConsole(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'warning' ? 'warning' : type === 'success' ? 'success' : 'info';
+            consoleDiv.innerHTML += `<div class="${className}">[${timestamp}] [${type.toUpperCase()}] ${message}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        console.log = function(msg) {
+            originalLog(msg);
+            addToConsole(msg, 'info');
+        };
+
+        console.error = function(msg) {
+            originalError(msg);
+            addToConsole(msg, 'error');
+        };
+
+        console.warn = function(msg) {
+            originalWarn(msg);
+            addToConsole(msg, 'warning');
+        };
+
+        function clearConsole() {
+            consoleDiv.innerHTML = '';
+            addToConsole('Consola limpiada', 'success');
+        }
+
+        function testElements() {
+            addToConsole('=== Verificando Elementos del DOM ===', 'info');
+            
+            const elements = {
+                'currentOrdersList': document.getElementById('currentOrdersList'),
+                'historyTableBody': document.getElementById('historyTableBody'),
+                'totalIncome': document.getElementById('totalIncome'),
+                'totalOrders': document.getElementById('totalOrders'),
+                'tableOrders': document.getElementById('tableOrders'),
+                'takeawayOrders': document.getElementById('takeawayOrders'),
+                'salesChart': document.getElementById('salesChart'),
+                'paymentChart': document.getElementById('paymentChart'),
+                'productsTableBody': document.getElementById('productsTableBody'),
+                'tablesTableBody': document.getElementById('tablesTableBody')
+            };
+
+            Object.entries(elements).forEach(([name, element]) => {
+                if (element) {
+                    addToConsole(`✓ ${name} - ENCONTRADO`, 'success');
+                } else {
+                    addToConsole(`✗ ${name} - NO ENCONTRADO`, 'error');
+                }
+            });
+
+            // Verificar pestañas
+            addToConsole('', 'info');
+            addToConsole('=== Verificando Pestañas ===', 'info');
+            const tabs = document.querySelectorAll('.tab');
+            addToConsole(`Total de pestañas encontradas: ${tabs.length}`, 'info');
+            tabs.forEach(tab => {
+                const dataTab = tab.getAttribute('data-tab');
+                const content = document.getElementById(dataTab);
+                if (content) {
+                    addToConsole(`✓ Pestaña "${dataTab}" - Contenedor ENCONTRADO`, 'success');
+                } else {
+                    addToConsole(`✗ Pestaña "${dataTab}" - Contenedor NO ENCONTRADO`, 'error');
+                }
+            });
+        }
+
+        function testTabs() {
+            addToConsole('=== Verificando Evento de Pestañas ===', 'info');
+            const tabs = document.querySelectorAll('.tab');
+            addToConsole(`Pestañas con event listeners: ${tabs.length}`, 'info');
+            tabs.forEach(tab => {
+                const dataTab = tab.getAttribute('data-tab');
+                const isActive = tab.classList.contains('active');
+                addToConsole(`Pestaña: ${dataTab} | Activa: ${isActive}`, 'info');
+            });
+        }
+
+        function simulateTabClick(tabId) {
+            addToConsole(`=== Simulando click en: ${tabId} ===`, 'warning');
+            
+            // Buscar la pestaña
+            const tab = Array.from(document.querySelectorAll('.tab')).find(t => t.getAttribute('data-tab') === tabId);
+            
+            if (tab) {
+                addToConsole(`✓ Pestaña encontrada: ${tabId}`, 'success');
+                tab.click();
+                
+                // Verificar si se activó
+                setTimeout(() => {
+                    const content = document.getElementById(tabId);
+                    if (content && content.classList.contains('active')) {
+                        addToConsole(`✓ Contenedor activado correctamente`, 'success');
+                    } else {
+                        addToConsole(`✗ Contenedor NO se activó`, 'error');
+                    }
+                }, 500);
+            } else {
+                addToConsole(`✗ Pestaña NO encontrada: ${tabId}`, 'error');
+            }
+        }
+
+        // Mensaje inicial
+        addToConsole('Debug Panel Inicializado - Abre tu navegador en la pestaña "Consola" (F12) para ver más detalles', 'success');
+        addToConsole('', 'info');
+    </script>
+</body>
+</html>
