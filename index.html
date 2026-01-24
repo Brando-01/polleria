@@ -558,6 +558,126 @@
             font-size: 1.2rem;
         }
         
+        /* Estilos para acordeón de meses */
+        .month-accordion {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: white;
+        }
+        
+        .month-header {
+            padding: 15px;
+            background-color: #f5f5f5;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .month-header:hover {
+            background-color: #efefef;
+        }
+        
+        .month-header.active {
+            background-color: rgba(255, 107, 53, 0.1);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .month-header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .month-icon {
+            font-size: 1.3rem;
+        }
+        
+        .month-toggle {
+            transition: transform 0.3s;
+            font-size: 1.2rem;
+        }
+        
+        .month-toggle.open {
+            transform: rotate(180deg);
+        }
+        
+        .month-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .month-content.open {
+            max-height: 5000px;
+            transition: max-height 0.3s ease-in;
+        }
+        
+        .weeks-list {
+            padding: 15px;
+        }
+        
+        .week-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background-color: white;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .week-row:hover {
+            background-color: rgba(255, 107, 53, 0.05);
+            border-color: var(--primary);
+        }
+        
+        .week-row.current {
+            background-color: rgba(255, 107, 53, 0.1);
+            border-color: var(--primary);
+            border-left: 4px solid var(--primary);
+            font-weight: 600;
+        }
+        
+        .week-info {
+            flex: 1;
+        }
+        
+        .week-dates {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 3px;
+        }
+        
+        .week-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .week-stat {
+            text-align: right;
+        }
+        
+        .week-stat-label {
+            color: #999;
+            font-size: 0.8rem;
+        }
+        
+        .week-stat-value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -970,25 +1090,19 @@
             <!-- Historial de semanas anteriores -->
             <div class="table-container" style="margin-top: 30px;">
                 <h3 style="margin-bottom: 20px;">📊 Historial de Ventas Semanales</h3>
-                <table id="weeklySalesTable">
-                    <thead>
-                        <tr>
-                            <th>Semana</th>
-                            <th>Fecha Inicio</th>
-                            <th>Fecha Fin</th>
-                            <th>Total de Pedidos</th>
-                            <th>Ingresos (S/)</th>
-                            <th>Ticket Promedio</th>
-                        </tr>
-                    </thead>
-                    <tbody id="weeklySalesBody">
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: #999; padding: 20px;">
-                                Cargando historial...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                
+                <!-- Selector de mes -->
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+                    <label for="monthSelector" style="font-weight: 500;">Seleccionar Mes:</label>
+                    <select id="monthSelector" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.95rem;">
+                        <option value="">Todos los meses</option>
+                    </select>
+                </div>
+                
+                <!-- Contenedor de meses con acordeón -->
+                <div id="monthsContainer">
+                    <!-- Se llenará dinámicamente -->
+                </div>
             </div>
         </div>
         
@@ -1596,8 +1710,9 @@
                     input.value = 0;
                 });
                 
-                // Actualizar la vista de pedidos actuales
+                // Actualizar la vista de pedidos actuales y mesas
                 loadCurrentOrders();
+                loadTables();
             });
         }
         
@@ -2033,7 +2148,7 @@
                         
                         // Agregar productos
                         order.items.forEach(item => {
-                            const productName = item.productName;
+                            const productName = item.name || 'Producto desconocido';
                             if (!productDetails[productName]) {
                                 productDetails[productName] = {
                                     quantity: 0,
@@ -2067,8 +2182,7 @@
             title.textContent = `Detalles del ${dayData.dayName}`;
             summary.innerHTML = `
                 <strong>Total de Pedidos:</strong> ${dayData.totalOrders} | 
-                <strong>Ingresos:</strong> S/ ${dayData.totalSales.toFixed(2)} | 
-                <strong>Ticket Promedio:</strong> S/ ${dayData.totalOrders > 0 ? (dayData.totalSales / dayData.totalOrders).toFixed(2) : '0.00'}
+                <strong>Ingresos:</strong> S/ ${dayData.totalSales.toFixed(2)}
             `;
             
             tbody.innerHTML = '';
@@ -2202,99 +2316,195 @@
             });
         }
         
-        // Cargar historial de semanas anteriores
+        // Cargar historial de semanas anteriores con meses
         function loadWeeklySalesHistory() {
-            const weeklySalesBody = document.getElementById('weeklySalesBody');
+            const monthsContainer = document.getElementById('monthsContainer');
+            const monthSelector = document.getElementById('monthSelector');
+            const today = new Date();
             
-            if (!weeklySalesBody) {
-                console.error('Element weeklySalesBody not found!');
+            if (!monthsContainer) {
+                console.error('Element monthsContainer not found!');
                 return;
             }
             
-            // Agrupar pedidos por semana
-            const weeklyData = {};
-            const today = new Date();
+            // Agrupar pedidos por mes y semana
+            const monthlyData = {};
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                              'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
             
+            // Obtener rango de meses (últimos 12 meses desde hoy)
+            const months = new Set();
+            for (let i = 0; i < 12; i++) {
+                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                months.add(monthKey);
+                
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = {
+                        name: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
+                        weeks: {},
+                        totalOrders: 0,
+                        totalSales: 0
+                    };
+                }
+            }
+            
+            // Procesar pedidos
             orders.filter(order => order.status === 'pagado').forEach(order => {
-                // Convertir fecha correctamente - format: "YYYY-MM-DD HH:MM"
                 const dateStr = order.date.replace(' ', 'T');
                 const orderDate = new Date(dateStr);
                 
-                if (isNaN(orderDate.getTime())) {
-                    console.warn('Fecha inválida:', order.date);
-                    return;
+                if (isNaN(orderDate.getTime())) return;
+                
+                const monthKey = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (monthlyData[monthKey]) {
+                    const dayOfWeek = orderDate.getDay();
+                    const firstDayOfWeek = new Date(orderDate);
+                    firstDayOfWeek.setDate(orderDate.getDate() - dayOfWeek + 1);
+                    const weekKey = firstDayOfWeek.toISOString().split('T')[0];
+                    
+                    if (!monthlyData[monthKey].weeks[weekKey]) {
+                        monthlyData[monthKey].weeks[weekKey] = {
+                            startDate: new Date(firstDayOfWeek),
+                            endDate: new Date(firstDayOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000),
+                            orders: 0,
+                            sales: 0,
+                            dayDetails: {}
+                        };
+                    }
+                    
+                    monthlyData[monthKey].weeks[weekKey].orders += 1;
+                    monthlyData[monthKey].weeks[weekKey].sales += parseFloat(order.total) || 0;
+                    monthlyData[monthKey].totalOrders += 1;
+                    monthlyData[monthKey].totalSales += parseFloat(order.total) || 0;
+                    
+                    // Detalles por día
+                    const dayName = orderDate.toLocaleDateString('es-ES', { weekday: 'long' });
+                    const dayNameCapitalized = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+                    if (!monthlyData[monthKey].weeks[weekKey].dayDetails[dayNameCapitalized]) {
+                        monthlyData[monthKey].weeks[weekKey].dayDetails[dayNameCapitalized] = { orders: 0, sales: 0 };
+                    }
+                    monthlyData[monthKey].weeks[weekKey].dayDetails[dayNameCapitalized].orders += 1;
+                    monthlyData[monthKey].weeks[weekKey].dayDetails[dayNameCapitalized].sales += parseFloat(order.total) || 0;
                 }
-                
-                const dayOfWeek = orderDate.getDay();
-                const firstDayOfWeek = new Date(orderDate);
-                firstDayOfWeek.setDate(orderDate.getDate() - dayOfWeek + 1);
-                
-                const weekKey = firstDayOfWeek.toISOString().split('T')[0];
-                
-                if (!weeklyData[weekKey]) {
-                    weeklyData[weekKey] = {
-                        startDate: new Date(firstDayOfWeek),
-                        endDate: new Date(firstDayOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000),
-                        orders: 0,
-                        sales: 0,
-                        dayDetails: {}
-                    };
-                }
-                
-                weeklyData[weekKey].orders += 1;
-                weeklyData[weekKey].sales += parseFloat(order.total) || 0;
-                
-                // Agrupar por día
-                const dayName = orderDate.toLocaleDateString('es-ES', { weekday: 'long' });
-                const dayNameCapitalized = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-                if (!weeklyData[weekKey].dayDetails[dayNameCapitalized]) {
-                    weeklyData[weekKey].dayDetails[dayNameCapitalized] = { orders: 0, sales: 0 };
-                }
-                weeklyData[weekKey].dayDetails[dayNameCapitalized].orders += 1;
-                weeklyData[weekKey].dayDetails[dayNameCapitalized].sales += parseFloat(order.total) || 0;
             });
             
-            // Ordenar por fecha descendente
-            const sortedWeeks = Object.entries(weeklyData).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+            // Llenar selector de meses
+            monthSelector.innerHTML = '<option value="">Todos los meses</option>';
+            Array.from(months).sort().reverse().forEach(monthKey => {
+                const option = document.createElement('option');
+                option.value = monthKey;
+                option.textContent = monthlyData[monthKey].name;
+                monthSelector.appendChild(option);
+            });
             
-            if (sortedWeeks.length === 0) {
-                weeklySalesBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; color: #999; padding: 20px;">
-                            No hay datos disponibles
-                        </td>
-                    </tr>
+            // Renderizar meses
+            renderMonthsAccordion(monthlyData, today);
+            
+            // Evento del selector
+            monthSelector.addEventListener('change', function() {
+                renderMonthsAccordion(monthlyData, today, this.value);
+            });
+        }
+        
+        // Renderizar acordeón de meses
+        function renderMonthsAccordion(monthlyData, today, selectedMonth = '') {
+            const container = document.getElementById('monthsContainer');
+            container.innerHTML = '';
+            
+            const sortedMonths = Object.entries(monthlyData).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+            
+            sortedMonths.forEach(([monthKey, monthInfo]) => {
+                // Filtrar por mes seleccionado
+                if (selectedMonth && monthKey !== selectedMonth) return;
+                
+                // Crear acordeón del mes
+                const monthAccordion = document.createElement('div');
+                monthAccordion.className = 'month-accordion';
+                
+                const isCurrentMonth = monthKey === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+                
+                // Header del mes
+                const monthHeader = document.createElement('div');
+                monthHeader.className = `month-header ${isCurrentMonth ? 'active' : ''}`;
+                monthHeader.innerHTML = `
+                    <div class="month-header-title">
+                        <span class="month-icon">${isCurrentMonth ? '📅' : '📆'}</span>
+                        <div>
+                            <strong>${monthInfo.name}</strong>
+                            <div style="font-size: 0.85rem; color: #666; font-weight: normal;">
+                                ${monthInfo.totalOrders} pedidos • S/ ${monthInfo.totalSales.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="month-toggle ${isCurrentMonth ? 'open' : ''}">▼</span>
                 `;
-                return;
-            }
-            
-            weeklySalesBody.innerHTML = '';
-            
-            sortedWeeks.forEach(([weekKey, weekInfo], index) => {
-                const row = document.createElement('tr');
-                const startDateStr = weekInfo.startDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                const endDateStr = weekInfo.endDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                const avgTicket = weekInfo.orders > 0 ? (weekInfo.sales / weekInfo.orders).toFixed(2) : 0;
                 
-                // Determinar si es la semana actual
-                const isCurrentWeek = index === 0 && sortedWeeks.length > 0;
-                
-                row.className = 'clickable';
-                row.innerHTML = `
-                    <td>${isCurrentWeek ? '<strong>📌 Semana Actual</strong>' : `Semana ${sortedWeeks.length - index}`}</td>
-                    <td>${startDateStr}</td>
-                    <td>${endDateStr}</td>
-                    <td>${weekInfo.orders}</td>
-                    <td><strong>S/ ${weekInfo.sales.toFixed(2)}</strong></td>
-                    <td>S/ ${avgTicket}</td>
-                `;
-                
-                // Evento click para mostrar reporte detallado
-                row.addEventListener('click', function() {
-                    showWeeklyReport(weekKey, weekInfo, startDateStr, endDateStr);
+                monthHeader.addEventListener('click', function() {
+                    const content = monthAccordion.querySelector('.month-content');
+                    this.classList.toggle('active');
+                    this.querySelector('.month-toggle').classList.toggle('open');
+                    content.classList.toggle('open');
                 });
                 
-                weeklySalesBody.appendChild(row);
+                // Contenido del mes (semanas)
+                const monthContent = document.createElement('div');
+                monthContent.className = `month-content ${isCurrentMonth ? 'open' : ''}`;
+                
+                const weeksList = document.createElement('div');
+                weeksList.className = 'weeks-list';
+                
+                // Agrupar y ordenar semanas
+                const sortedWeeks = Object.entries(monthInfo.weeks).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+                
+                if (sortedWeeks.length === 0) {
+                    weeksList.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No hay datos en este mes</p>';
+                } else {
+                    sortedWeeks.forEach(([weekKey, weekInfo]) => {
+                        const startDateStr = weekInfo.startDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                        const endDateStr = weekInfo.endDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+                        
+                        // Determinar si es la semana actual
+                        const dayOfWeek = today.getDay();
+                        const firstDayOfWeek = new Date(today);
+                        firstDayOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+                        const isCurrentWeek = weekKey === firstDayOfWeek.toISOString().split('T')[0];
+                        
+                        const weekRow = document.createElement('div');
+                        weekRow.className = `week-row ${isCurrentWeek ? 'current' : ''}`;
+                        weekRow.innerHTML = `
+                            <div class="week-info">
+                                <div>${isCurrentWeek ? '📌 Semana Actual' : 'Semana'}</div>
+                                <div class="week-dates">${startDateStr} - ${endDateStr}</div>
+                            </div>
+                            <div class="week-stats">
+                                <div class="week-stat">
+                                    <div class="week-stat-label">Pedidos</div>
+                                    <div class="week-stat-value">${weekInfo.orders}</div>
+                                </div>
+                                <div class="week-stat">
+                                    <div class="week-stat-label">Ingresos</div>
+                                    <div class="week-stat-value">S/ ${weekInfo.sales.toFixed(2)}</div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Click para ver detalles
+                        weekRow.addEventListener('click', function() {
+                            const startDateFull = weekInfo.startDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            const endDateFull = weekInfo.endDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            showWeeklyReport(weekKey, weekInfo, startDateFull, endDateFull);
+                        });
+                        
+                        weeksList.appendChild(weekRow);
+                    });
+                }
+                
+                monthContent.appendChild(weeksList);
+                monthAccordion.appendChild(monthHeader);
+                monthAccordion.appendChild(monthContent);
+                container.appendChild(monthAccordion);
             });
         }
         
