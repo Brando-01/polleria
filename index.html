@@ -677,7 +677,91 @@
             color: var(--dark);
         }
         
+        /* Animaciones */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
         
+        @keyframes pulseSuccess {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .animation-order-saved {
+            animation: slideInDown 0.6s ease-out;
+        }
+        
+        .animation-payment-success {
+            animation: pulseSuccess 0.6s ease-out;
+        }
+        
+        .notification-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28A745;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            animation: slideInDown 0.5s ease-out;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notification-popup.success {
+            background-color: #28A745;
+        }
+        
+        .notification-popup.info {
+            background-color: #17A2B8;
+        }
+        
+        .notification-popup-close {
+            animation: slideInDown 0.5s ease-out reverse;
+        }
+        
+        
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -1330,6 +1414,25 @@
     </div>
     
     <script>
+        // Función para mostrar notificaciones popup animadas
+        function showNotification(message, type = 'success', duration = 3000) {
+            const notification = document.createElement('div');
+            notification.className = `notification-popup ${type}`;
+            notification.innerHTML = `
+                <span>${type === 'success' ? '✓' : 'ℹ'}</span>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+            
+            // Remover la notificación después del tiempo especificado
+            setTimeout(() => {
+                notification.classList.add('notification-popup-close');
+                setTimeout(() => {
+                    notification.remove();
+                }, 500);
+            }, duration);
+        }
+        
         // Datos iniciales de la aplicación
         const defaultProducts = [
             { id: 1, name: "1/8 de Pollo", category: "pollo", price: 8.00 },
@@ -1745,6 +1848,9 @@
                 // Agregar a la lista de pedidos
                 orders.push(newOrder);
                 
+                // Mostrar notificación animada de éxito
+                showNotification(`✓ Pedido #${newOrder.id} guardado correctamente - S/ ${total.toFixed(2)}`);
+                
                 // Guardar datos en localStorage
                 saveData();
                 
@@ -1770,9 +1876,6 @@
                         console.error(`✗✗✗ Mesa "${tableNumInt}" NO encontrada. Mesas disponibles:`, tables.map(t => ({ number: t.number, intValue: parseInt(t.number, 10) })));
                     }
                 }
-                
-                // Mostrar confirmación
-                alert(`Pedido registrado exitosamente.\nTotal: S/ ${total.toFixed(2)}`);
                 
                 // Limpiar formulario
                 currentOrder.items = [];
@@ -2092,6 +2195,9 @@
                     'card': 'Tarjeta'
                 };
                 
+                // Variable para el mensaje de notificación
+                let notificationMessage = `✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]}`;
+                
                 // Liberar mesa si es pedido en mesa
                 if (order.type === 'table' && order.tableNumber) {
                     const tableNumInt = parseInt(String(order.tableNumber).trim(), 10);
@@ -2105,14 +2211,14 @@
                     if (table) {
                         table.status = 'disponible';
                         console.log(`✓✓✓ Mesa ${table.number} ahora está disponible`);
-                        alert(`✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]}.\n✓ Mesa ${table.number} ahora está disponible.`);
+                        notificationMessage = `✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]} - Mesa ${table.number} liberada`;
                     } else {
                         console.warn(`Mesa ${tableNumInt} no encontrada en el pago`);
-                        alert(`✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]}.`);
                     }
-                } else {
-                    alert(`✓ Pedido #${orderId} pagado con ${paymentNames[paymentMethod]}.`);
                 }
+                
+                // Mostrar notificación animada de pago completado
+                showNotification(notificationMessage, 'success', 4000);
                 
                 // Guardar datos en localStorage
                 saveData();
@@ -2364,9 +2470,7 @@
         // Obtener detalles de productos de un día específico
         function getDayProductDetails(dayName) {
             const today = new Date();
-            const dayOfWeek = today.getDay();
-            const firstDayOfWeek = new Date(today);
-            firstDayOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+            const firstDayOfWeek = getFirstDayOfWeek(today);
             
             const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
             const dayIndex = daysOfWeek.indexOf(dayName);
@@ -2458,12 +2562,22 @@
             modal.style.display = 'flex';
         }
         
+        // Función auxiliar para obtener el primer día de la semana (lunes)
+        // De forma correcta incluyendo domingo como parte de la semana anterior
+        function getFirstDayOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            // 0 = domingo, 1 = lunes, ... 6 = sábado
+            // Si es domingo (0), queremos el lunes de ESTA semana (hace -6 días)
+            // Si es otros días, queremos el lunes de esta semana (hace dayOfWeek - 1 días)
+            const diff = d.getDate() - (day === 0 ? 6 : day - 1);
+            return new Date(d.getFullYear(), d.getMonth(), diff);
+        }
+        
         // Obtener datos de la semana actual (por día)
         function getWeeklyData() {
             const today = new Date();
-            const dayOfWeek = today.getDay(); // 0 = domingo, 1 = lunes, etc.
-            const firstDayOfWeek = new Date(today);
-            firstDayOfWeek.setDate(today.getDate() - dayOfWeek + 1); // Comienza el lunes
+            const firstDayOfWeek = getFirstDayOfWeek(today);
             
             // Inicializar datos para cada día de la semana
             const weekData = {
@@ -2490,16 +2604,15 @@
                         return;
                     }
                     
-                    const orderDayOfWeek = orderDate.getDay();
-                    const orderMonth = orderDate.getMonth();
-                    const orderYear = orderDate.getFullYear();
+                    // Obtener el primer día de la semana del pedido
+                    const orderFirstDayOfWeek = getFirstDayOfWeek(orderDate);
                     
-                    const todayMonth = today.getMonth();
-                    const todayYear = today.getFullYear();
+                    // Comparar si están en la misma semana usando timestamps
+                    const orderWeekStart = orderFirstDayOfWeek.getTime();
+                    const todayWeekStart = firstDayOfWeek.getTime();
                     
-                    // Verificar si el pedido está en la semana actual
-                    const daysFromMonday = (orderDate.getDate() - firstDayOfWeek.getDate());
-                    if (daysFromMonday >= 0 && daysFromMonday <= 6 && orderMonth === todayMonth && orderYear === todayYear) {
+                    if (orderWeekStart === todayWeekStart) {
+                        const orderDayOfWeek = orderDate.getDay();
                         const dayName = days[orderDayOfWeek === 0 ? 6 : orderDayOfWeek - 1];
                         if (weekData[dayName]) {
                             weekData[dayName].sales += parseFloat(order.total) || 0;
@@ -2613,9 +2726,7 @@
                 const monthKey = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
                 
                 if (monthlyData[monthKey]) {
-                    const dayOfWeek = orderDate.getDay();
-                    const firstDayOfWeek = new Date(orderDate);
-                    firstDayOfWeek.setDate(orderDate.getDate() - dayOfWeek + 1);
+                    const firstDayOfWeek = getFirstDayOfWeek(orderDate);
                     const weekKey = firstDayOfWeek.toISOString().split('T')[0];
                     
                     if (!monthlyData[monthKey].weeks[weekKey]) {
@@ -2720,9 +2831,7 @@
                         const endDateStr = weekInfo.endDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
                         
                         // Determinar si es la semana actual
-                        const dayOfWeek = today.getDay();
-                        const firstDayOfWeek = new Date(today);
-                        firstDayOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+                        const firstDayOfWeek = getFirstDayOfWeek(today);
                         const isCurrentWeek = weekKey === firstDayOfWeek.toISOString().split('T')[0];
                         
                         const weekRow = document.createElement('div');
