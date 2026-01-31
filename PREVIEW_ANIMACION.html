@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista Previa - Animación de Apertura</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #FF6B35;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .info-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            border-left: 5px solid #FF6B35;
+        }
+
+        .info-section h2 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .info-section p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            color: #FF6B35;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #FF6B35, #FF8C42);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #FF6B35;
+            border: 2px solid #FF6B35;
+        }
+
+        .btn-secondary:hover {
+            background: #FF6B35;
+            color: white;
+        }
+
+        .timeline {
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .timeline-item {
+            padding: 20px;
+            margin-bottom: 15px;
+            background: white;
+            border-left: 4px solid #FF6B35;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timeline-time {
+            font-weight: bold;
+            color: #FF6B35;
+            min-width: 60px;
+            text-align: right;
+            margin-right: 20px;
+        }
+
+        .timeline-description {
+            flex: 1;
+            color: #555;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .timeline-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .timeline-time {
+                margin-right: 0;
+                margin-bottom: 10px;
+                text-align: left;
+            }
+        }
+
+        .badge {
+            display: inline-block;
+            background: #FF6B35;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 5px 5px 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Animación de Apertura</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Pollos a la Brasa - Sistema de Gestión
+        </p>
+
+        <div class="info-section">
+            <h2>✨ Qué Verás</h2>
+            <p>
+                Cuando accedas a la página principal (<strong>index.html</strong>), se ejecutará una animación 
+                espectacular donde cortinas naranjas se abren desde los lados revelando el logo de la empresa 
+                en el centro, seguido de la apertura fluida del contenido principal.
+            </p>
+        </div>
+
+        <div class="info-section">
+            <h2>🎯 Características de la Animación</h2>
+            <ul class="feature-list">
+                <li>Cortinas naranjas que se abren simultáneamente</li>
+                <li>Logo con efecto de escala y rotación</li>
+                <li>Contenido principal con fade-in suave</li>
+                <li>Duración total: ~2.2 segundos</li>
+                <li>100% fluido y sin dependencias externas</li>
+                <li>Compatible con todos los navegadores modernos</li>
+            </ul>
+        </div>
+
+        <div class="info-section">
+            <h2>⏱️ Timeline de la Animación</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-time">0.0s</div>
+                    <div class="timeline-description">Página comienza a cargar - Overlay y cortinas visibles</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">0.2s</div>
+                    <div class="timeline-description">Logo aparece en el centro con efecto de escala</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">1.5s</div>
+                    <div class="timeline-description">Cortinas completamente abiertas (fin de animación)</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">0.7s</div>
+                    <div class="timeline-description">Contenido principal comienza a aparecer</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">1.8s</div>
+                    <div class="timeline-description">Overlay comienza a desaparecer</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">2.2s</div>
+                    <div class="timeline-description">Overlay completamente removido - Página lista</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>🎨 Colores Utilizados</h2>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 40px; height: 40px; background: #FF6B35; border-radius: 5px;"></div>
+                    <span>#FF6B35 (Naranja Principal)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 40px; height: 40px; background: #FF8C42; border-radius: 5px;"></div>
+                    <span>#FF8C42 (Naranja Claro)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>📁 Archivos Involucrados</h2>
+            <ul class="feature-list">
+                <li><strong>index.html</strong> - Archivo principal con la animación integrada</li>
+                <li><strong>logo.png</strong> - Imagen del logo que se revela</li>
+            </ul>
+        </div>
+
+        <div class="info-section">
+            <h2>🔧 Elementos Clave del Código</h2>
+            <p><strong>HTML:</strong></p>
+            <div class="code-block">
+&lt;div class="opening-overlay" id="openingOverlay"&gt;
+    &lt;div class="curtain-left"&gt;&lt;/div&gt;
+    &lt;div class="curtain-right"&gt;&lt;/div&gt;
+    &lt;div class="logo-reveal"&gt;
+        &lt;img src="logo.png"&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+            </div>
+
+            <p style="margin-top: 15px;"><strong>CSS (Animación):</strong></p>
+            <div class="code-block">
+@keyframes openCurtainLeft {
+    0% { transform: scaleX(1); }
+    100% { transform: scaleX(0); }
+}
+
+@keyframes scaleUpLogo {
+    0% { transform: scale(0.3) rotate(-10deg); }
+    100% { transform: scale(1); }
+}
+            </div>
+
+            <p style="margin-top: 15px;"><strong>JavaScript:</strong></p>
+            <div class="code-block">
+function initOpeningAnimation() {
+    // 1.8s: Overlay se vuelve transparente
+    // 2.2s: Overlay se remueve del DOM
+}
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>✅ Ventajas de esta Implementación</h2>
+            <ul class="feature-list">
+                <li>Sin dependencias externas (CSS3 + JavaScript vanilla)</li>
+                <li>Optimizado para rendimiento (GPU-acelerado)</li>
+                <li>Responsive en todos los dispositivos</li>
+                <li>No interfiere con la funcionalidad existente</li>
+                <li>Fácil de personalizar y ajustar</li>
+                <li>Experiencia de usuario premium</li>
+            </ul>
+        </div>
+
+        <div style="background: #e8f5e9; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: center; border-left: 5px solid #28A745;">
+            <h3 style="color: #28A745; margin-bottom: 10px;">✨ Animación Completamente Implementada</h3>
+            <p style="color: #666; margin-bottom: 20px;">
+                La animación está integrada en el archivo <strong>index.html</strong> y se ejecutará automáticamente 
+                cuando cargues la página.
+            </p>
+            <span class="badge" style="background: #28A745;">Estado: Activo ✓</span>
+        </div>
+
+        <div class="button-group">
+            <a href="index.html" class="btn btn-primary">
+                🚀 Ver Animación en Vivo
+            </a>
+            <a href="ANIMACION_APERTURA.md" class="btn btn-secondary">
+                📖 Ver Documentación Completa
+            </a>
+        </div>
+    </div>
+</body>
+</html>
